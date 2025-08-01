@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 // 프로젝트 표준 컴포넌트들만 사용
 import Button from '../components/Button';
-import QuickStartItem from '../components/QuickStartItem';
 import LoadingSpinner from '../components/LoadingSpinner';
+import QuickStartItem from '../components/QuickStartItem';
 import SplashScreen from '../components/splash/SplashScreen';
 
 // 게임 팝업 유틸리티
-import { openGamePopup } from '../utils/gamePopup';
 
 // 사용자 인증 hook
 import { useUser } from '../hooks/useUser';
@@ -28,10 +27,11 @@ export default function CasinoDashboard() {
     // 사용자 로딩이 완료되고 로그인되지 않은 경우 리다이렉트
     if (!userLoading && !user) {
       // setTimeout을 사용하여 렌더링 사이클 이후에 실행
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         router.replace('/auth');
-      }, 0);
-      return;
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
   }, [user, userLoading, router]);
 
@@ -134,9 +134,8 @@ export default function CasinoDashboard() {
     );
   }
 
-  // 로그인되지 않은 경우 즉시 리다이렉트 (스플래시 건너뛰기)
+  // 로그인되지 않은 경우 로딩 화면 표시
   if (!user) {
-    router.replace('/auth');
     return (
       <div className="min-h-screen flex items-center justify-center"
         style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 25%, #0f0f0f 50%, #1a1a1a 75%, #0a0a0a 100%)' }}>
