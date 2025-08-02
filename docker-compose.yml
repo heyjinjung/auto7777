@@ -119,14 +119,14 @@ services:
     volumes:
       - ./cc-webapp/backend:/app
       - backend_logs:/app/logs
+    networks:
+      - ccnet
     healthcheck:
       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
-    networks:
-      - ccnet
 
   # Frontend (Next.js)
   frontend:
@@ -145,8 +145,6 @@ services:
       - ./cc-webapp/frontend:/app
       - /app/node_modules
       - /app/.next
-    networks:
-      - ccnet
 
   # Celery Worker (백그라운드 작업)
   celery-worker:
@@ -167,8 +165,6 @@ services:
     command: celery -A app.core.celery_app worker --loglevel=info
     volumes:
       - ./cc-webapp/backend:/app
-    networks:
-      - ccnet
 
   # Celery Beat (스케줄러)
   celery-beat:
@@ -189,8 +185,6 @@ services:
     command: celery -A app.core.celery_app beat --loglevel=info
     volumes:
       - ./cc-webapp/backend:/app
-    networks:
-      - ccnet
 
 volumes:
   pgdata:

@@ -9,12 +9,12 @@ alembic==1.13.0
 psycopg2-binary==2.9.9
 
 # Redis 및 캐싱
-# Redis dependencies removed
+redis==5.0.1
 
 # 인증 및 보안
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.0.1
+PyJWT==2.8.0
 
 # Kafka 및 메시징
 kafka-python==2.0.2
@@ -33,13 +33,11 @@ sentry-sdk[fastapi]==1.39.1
 # HTTP 클라이언트
 httpx
 aiohttp==3.9.1
-requests==2.32.4
 
 # 유틸리티
 python-dotenv==1.0.0
 pydantic-settings==2.1.0
 email-validator==2.1.0
-python-multipart==0.0.6
 
 # 개발 도구
 pytest==7.4.3

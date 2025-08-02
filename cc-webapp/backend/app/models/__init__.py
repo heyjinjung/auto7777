@@ -23,28 +23,27 @@ from .game_models import (
     GameSession,
     UserActivity,
     Reward,
-    GachaResult,
-    UserProgress,
 )
 
 # Content 모델들
 from .content_models import (
     AdultContent,
-    ContentView,
-    ContentLike,
-    ContentPurchase,
-    ContentCategory,
-    ContentTag,
+    VIPAccessLog,
+    Purchase,
+    Shop,
+    Notification,
 )
 
 # Analytics 모델들
 from .analytics_models import (
-    UserAnalytics,
-    PageView,
-    ConversionEvent,
     UserSegment,
-    ABTestParticipant,
-    CustomEvent,
+    BattlePass,
+    BattlePassProgress,
+    BattlePassReward,
+    BattlePassClaimed,
+    GachaPool,
+    GachaItem,
+    GachaLog,
 )
 
 # 모든 모델 클래스들을 리스트로 정의
