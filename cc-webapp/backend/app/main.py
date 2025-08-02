@@ -329,120 +329,99 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register API routers
-# 1. 인증 라우터
+# API 라우터 등록
+print("\n📌 Registering API routers...")
+
+# 1. 인증 라우터 (Simple Auth)
 if SIMPLE_AUTH_AVAILABLE:
-    app.include_router(simple_auth.router, prefix="/api", tags=["Simple Auth"])
-    print("✅ Simple Auth API endpoints registered")
-elif AUTH_ROUTER_AVAILABLE:
-    try:
-        app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-        print("✅ Auth API registered")
-    except Exception as e:
-        print(f"❌ Error registering Auth router: {e}")
-else:
-    print("⚠️ No Auth API available")
+    app.include_router(simple_auth.router, prefix="/api", tags=["Authentication"])
+    print("✅ Simple Auth router registered")
 
 # 2. 사용자 라우터
 if USERS_ROUTER_AVAILABLE:
     try:
         app.include_router(users.router, prefix="/api/users", tags=["Users"])
-        print("✅ Users API registered")
+        print("✅ Users router registered")
     except Exception as e:
-        print(f"❌ Error registering Users router: {e}")
-else:
-    print("⚠️ Users API not available")
+        print(f"❌ Failed to register users router: {e}")
 
-# 3. 게임 라우터들
-# 3.0 통합 게임 라우터
-try:
-    from app.routers import games
-    GAMES_ROUTER_AVAILABLE = True
-    app.include_router(games.router, prefix="/api/games", tags=["🎮 게임"])
-    print("✅ Integrated Games API registered")
-except Exception as e:
-    print(f"❌ Error registering Games router: {e}")
-    GAMES_ROUTER_AVAILABLE = False
-
-# 3.1 RPS (가위바위보) 게임
-if RPS_ROUTER_AVAILABLE:
-    try:
-        app.include_router(rps.router, prefix="/api/games/rps", tags=["🎮 게임"])
-        print("✅ RPS game API registered")
-    except Exception as e:
-        print(f"❌ Error registering RPS router: {e}")
-else:
-    print("⚠️ RPS game API not available")
-
-# 3.2 슬롯 게임
-if SLOTS_ROUTER_AVAILABLE:
-    try:
-        app.include_router(slots.router, prefix="/api/games/slots", tags=["🎮 게임"])
-        print("✅ Slots game API registered") 
-    except Exception as e:
-        print(f"❌ Error registering Slots router: {e}")
-else:
-    print("⚠️ Slots game API not available")
-
-# 3.3 룰렛 게임
-if ROULETTE_ROUTER_AVAILABLE:
-    try:
-        app.include_router(roulette.router, prefix="/api/games/roulette", tags=["🎮 게임"])
-        print("✅ Roulette game API registered")
-    except Exception as e:
-        print(f"❌ Error registering Roulette router: {e}")
-else:
-    print("⚠️ Roulette game API not available")
-
-# 4. 가챠 라우터
-if GACHA_ROUTER_AVAILABLE:
-    try:
-        app.include_router(gacha.router, prefix="/api/gacha", tags=["Gacha"])
-        print("✅ Gacha API registered")
-    except Exception as e:
-        print(f"❌ Error registering Gacha router: {e}")
-else:
-    print("⚠️ Gacha API not available")
-
-# 5. 상점 라우터
-if SHOP_ROUTER_AVAILABLE:
-    try:
-        app.include_router(shop.router, prefix="/api/shop", tags=["Shop"])
-        print("✅ Shop API registered")
-    except Exception as e:
-        print(f"❌ Error registering Shop router: {e}")
-else:
-    print("⚠️ Shop API not available")
-
-# 6. 배틀패스 라우터
-if BATTLEPASS_ROUTER_AVAILABLE:
-    try:
-        app.include_router(battlepass.router, prefix="/api/battlepass", tags=["BattlePass"])
-        print("✅ BattlePass API registered")
-    except Exception as e:
-        print(f"❌ Error registering BattlePass router: {e}")
-else:
-    print("⚠️ BattlePass API not available")
-
-# 7. 보상 라우터
-if REWARDS_ROUTER_AVAILABLE:
-    try:
-        app.include_router(rewards.router, prefix="/api/rewards", tags=["Rewards"])
-        print("✅ Rewards API registered")
-    except Exception as e:
-        print(f"❌ Error registering Rewards router: {e}")
-else:
-    print("⚠️ Rewards API not available")
-
-# 8. 대시보드 라우터
+# 3. 대시보드 라우터 (prefix 수정)
 if DASHBOARD_ROUTER_AVAILABLE:
     try:
-        app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
-        print("✅ Dashboard API registered")
+        app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+        print("✅ Dashboard router registered")
     except Exception as e:
-        print(f"❌ Error registering Dashboard router: {e}")
-else:
-    print("⚠️ Dashboard API not available")
+        print(f"❌ Failed to register dashboard router: {e}")
+
+# 4. 통합 게임 라우터
+if GAMES_ROUTER_AVAILABLE:
+    try:
+        app.include_router(games.router, prefix="/api/games", tags=["Games"])
+        print("✅ Games router registered")
+    except Exception as e:
+        print(f"❌ Failed to register games router: {e}")
+
+# 5. 가챠 라우터 (새로 추가)
+try:
+    from app.routers import gacha
+    app.include_router(gacha.router, prefix="/api/gacha", tags=["Gacha"])
+    print("✅ Gacha router registered")
+except Exception as e:
+    print(f"❌ Failed to register gacha router: {e}")
+
+# 6. 개별 게임 라우터들
+if RPS_ROUTER_AVAILABLE:
+    try:
+        app.include_router(rps.router, prefix="/api/games/rps", tags=["RPS Game"])
+        print("✅ RPS router registered")
+    except Exception as e:
+        print(f"❌ Failed to register RPS router: {e}")
+
+if ROULETTE_ROUTER_AVAILABLE:
+    try:
+        app.include_router(roulette.router, prefix="/api/games/roulette", tags=["Roulette Game"])
+        print("✅ Roulette router registered")
+    except Exception as e:
+        print(f"❌ Failed to register roulette router: {e}")
+
+if SLOT_ROUTER_AVAILABLE:
+    try:
+        app.include_router(slot.router, prefix="/api/games/slots", tags=["Slot Game"])
+        print("✅ Slot router registered")
+    except Exception as e:
+        print(f"❌ Failed to register slot router: {e}")
+
+# 7. 상점 라우터
+try:
+    from app.routers import shop
+    app.include_router(shop.router, prefix="/api/shop", tags=["Shop"])
+    print("✅ Shop router registered")
+except Exception as e:
+    print(f"❌ Failed to register shop router: {e}")
+
+# 8. 배틀패스 라우터
+try:
+    from app.routers import battlepass
+    app.include_router(battlepass.router, prefix="/api/battlepass", tags=["BattlePass"])
+    print("✅ BattlePass router registered")
+except Exception as e:
+    print(f"❌ Failed to register battlepass router: {e}")
+
+# 9. 보상 라우터
+try:
+    from app.routers import rewards
+    app.include_router(rewards.router, prefix="/api/rewards", tags=["Rewards"])
+    print("✅ Rewards router registered")
+except Exception as e:
+    print(f"❌ Failed to register rewards router: {e}")
+
+# 10. 리더보드 라우터
+try:
+    from app.routers import leaderboard
+    app.include_router(leaderboard.router, prefix="/api/leaderboard", tags=["Leaderboard"])
+    print("✅ Leaderboard router registered")
+except Exception as e:
+    print(f"❌ Failed to register leaderboard router: {e}")
 
 # Kafka API 라우터 등록 (가능한 경우에만)
 if KAFKA_AVAILABLE:

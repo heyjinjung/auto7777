@@ -7,7 +7,6 @@ from ..services.auth_service import AuthService # For admin protection
 from .. import models
 
 router = APIRouter(
-    prefix="",
     tags=["dashboard", "admin"],
     # dependencies=[Depends(AuthService.get_current_admin)] # Protect all dashboard routes
 )

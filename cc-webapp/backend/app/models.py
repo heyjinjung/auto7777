@@ -1,10 +1,9 @@
-
 # --- Unified Imports & Base ---
 from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey, Boolean, Text, Index
 from sqlalchemy.orm import relationship, declarative_base
 # from sqlalchemy.dialects.postgresql import JSONB  # 임시 비활성화
 from sqlalchemy.types import JSON
-from datetime import datetime
+from datetime import datetime, timezone
 
 Base = declarative_base()
 
@@ -353,17 +352,61 @@ class SecurityEvent(Base):
     )
 
 
-#   age_verification_records = relationship("AgeVerificationRecord", back_populates="user")
-#   ...
+class GachaLog(Base):
+    """가챠 로그 테이블"""
+    __tablename__ = "gacha_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    gacha_type = Column(String(50))
+    item_rarity = Column(String(50))
+    item_name = Column(String(100))
+    item_type = Column(String(50))
+    item_value = Column(Integer)
+    cost = Column(Integer)
+    currency = Column(String(20))
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    
+    user = relationship("User", back_populates="gacha_logs")
 
+class User(Base):
+    """사용자 테이블 - 필드 추가"""
+    __tablename__ = "users"
+    
+    # ...existing code...
+    premium_gems = Column(Integer, default=0)  # 프리미엄 젬 추가
+    
+    # ...existing code...
+    gacha_logs = relationship("GachaLog", back_populates="user")
+    shop_transactions = relationship("ShopTransaction", back_populates="user")
 
-# Note for developer:
-# After defining or updating models, an Alembic migration is needed:
-# 1. alembic revision -m "add_notifications_table" (or a more descriptive name)
-# 2. Edit the generated migration script in alembic/versions/ to ensure it correctly
-#    reflects the model definitions (e.g., op.create_table(...)).
-# 3. alembic upgrade head
-#
-# Also, ensure alembic/env.py is configured to use this Base:
-# from app.models import Base # This should already be done
-# target_metadata = Base.metadata # This should already be done
+class ShopItem(Base):
+    """상점 아이템"""
+    __tablename__ = "shop_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text)
+    price = Column(Integer, nullable=False)
+    currency = Column(String(20), nullable=False)  # COIN, GEM
+    category = Column(String(50))  # PACKAGE, CURRENCY, LOOTBOX, etc
+    is_available = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    
+    transactions = relationship("ShopTransaction", back_populates="item")
+
+class ShopTransaction(Base):
+    """상점 거래 기록"""
+    __tablename__ = "shop_transactions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    item_id = Column(Integer, ForeignKey("shop_items.id"))
+    quantity = Column(Integer, default=1)
+    price_per_item = Column(Integer)
+    total_price = Column(Integer)
+    currency = Column(String(20))
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    
+    user = relationship("User", back_populates="shop_transactions")
+    item = relationship("ShopItem", back_populates="transactions")

@@ -5,9 +5,14 @@ import random
 import os
 import json
 import logging
+from datetime import datetime, timezone
+from sqlalchemy.exc import SQLAlchemyError
 
 from .token_service import TokenService
 from ..repositories.game_repository import GameRepository
+from app import models
+from app.services.user_service import UserService
+from app.services.reward_service import RewardService
 
 
 @dataclass
@@ -37,12 +42,58 @@ class GachaService:
         ("Near_Miss_Legendary", 0.093), # 9.3% (Legendary 근접 실패)
     ]
 
+    # 가챠 아이템 풀
+    GACHA_ITEMS = {
+        "COMMON": [
+            {"name": "작은 코인 상자", "type": "COIN", "value": 50},
+            {"name": "체력 회복제", "type": "ENERGY", "value": 10},
+            {"name": "일반 부스터", "type": "BOOSTER", "value": 1}
+        ],
+        "RARE": [
+            {"name": "큰 코인 상자", "type": "COIN", "value": 200},
+            {"name": "경험치 부스터", "type": "EXP_BOOST", "value": 2},
+            {"name": "희귀 아바타", "type": "AVATAR", "value": 1}
+        ],
+        "EPIC": [
+            {"name": "프리미엄 젬", "type": "GEM", "value": 5},
+            {"name": "에픽 무기", "type": "WEAPON", "value": 1},
+            {"name": "VIP 패스 (3일)", "type": "VIP_PASS", "value": 3}
+        ],
+        "LEGENDARY": [
+            {"name": "전설의 보물", "type": "GEM", "value": 50},
+            {"name": "영구 VIP", "type": "VIP_PERMANENT", "value": 1},
+            {"name": "최고급 스킨", "type": "SKIN", "value": 1}
+        ]
+    }
+    
+    # 가챠 타입별 설정
+    GACHA_CONFIG = {
+        "BASIC": {
+            "cost": 100,
+            "currency": "COIN",
+            "rates": {"COMMON": 60, "RARE": 30, "EPIC": 9, "LEGENDARY": 1}
+        },
+        "PREMIUM": {
+            "cost": 10,
+            "currency": "GEM",
+            "rates": {"RARE": 50, "EPIC": 35, "LEGENDARY": 15}
+        },
+        "SPECIAL": {
+            "cost": 50,
+            "currency": "GEM",
+            "rates": {"EPIC": 70, "LEGENDARY": 30}
+        }
+    }
+    
     def __init__(self, repository: GameRepository | None = None, token_service: TokenService | None = None, db: Optional[Session] = None) -> None:
         self.repo = repository or GameRepository()
         self.token_service = token_service or TokenService(db or None, self.repo)
         self.logger = logging.getLogger(__name__)
         self.rarity_table = self._load_rarity_table()
         self.reward_pool = self._load_reward_pool()
+        self.db = db
+        self.user_service = UserService(db)
+        self.reward_service = RewardService(db)
 
     def _load_rarity_table(self) -> List[Tuple[str, float]]:
         """환경 변수에서 확률 테이블을 로드"""
@@ -219,6 +270,92 @@ class GachaService:
         balance = self.token_service.get_token_balance(user_id)
         self.repo.record_action(db, user_id, "GACHA_PULL", -cost)
         
+        return GachaPullResult(
+            results=results,
+            tokens_change=-cost,
+            balance=balance,
+            near_miss_occurred=near_miss_occurred,
+            animation_type=animation_type,
+            psychological_message=psychological_message,
+        )
+    
+    def spin_gacha(self, user_id: int, gacha_type: str, count: int = 1) -> Dict[str, Any]:
+        """새로운 가챠 API를 위한 메서드"""
+        cost_per_pull = 100 if gacha_type == "BASIC" else 250
+        total_cost = cost_per_pull * count
+        
+        items = []
+        for _ in range(count):
+            # 기존 pull_gacha 메서드 사용
+            result = self.pull_gacha(user_id, cost_per_pull, db=None)
+            
+            # 결과를 새 형식으로 변환
+            rarity = result.results[0] if result.results else "Common"
+            item_name = self._get_item_name_for_rarity(rarity)
+            
+            items.append({
+                "rarity": rarity,
+                "item": {
+                    "name": item_name,
+                    "type": self._get_item_type_for_rarity(rarity),
+                    "value": self._get_item_value_for_rarity(rarity)
+                },
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        return {
+            "success": True,
+            "items": items,
+            "total_cost": total_cost,
+            "remaining_balance": self.token_service.get_token_balance(user_id) if self.token_service else 1000
+        }
+    
+    def get_user_gacha_history(self, user_id: int, limit: int = 10) -> List[Dict[str, Any]]:
+        """가챠 히스토리 조회"""
+        try:
+            history = self.repo.get_gacha_history(user_id)
+            return [
+                {
+                    "gacha_type": "BASIC",
+                    "item_rarity": item,
+                    "item_name": self._get_item_name_for_rarity(item),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+                for item in history[:limit]
+            ]
+        except:
+            return []
+    
+    def _get_item_name_for_rarity(self, rarity: str) -> str:
+        """희귀도에 따른 아이템 이름 반환"""
+        mapping = {
+            "Common": "일반 코인 상자",
+            "Rare": "희귀 보석함",
+            "Epic": "에픽 보물 상자",
+            "Legendary": "전설의 보물함"
+        }
+        return mapping.get(rarity, "일반 코인 상자")
+    
+    def _get_item_type_for_rarity(self, rarity: str) -> str:
+        """희귀도에 따른 아이템 타입 반환"""
+        mapping = {
+            "Common": "COIN",
+            "Rare": "COIN",
+            "Epic": "GEM",
+            "Legendary": "GEM"
+        }
+        return mapping.get(rarity, "COIN")
+    
+    def _get_item_value_for_rarity(self, rarity: str) -> int:
+        """희귀도에 따른 아이템 가치 반환"""
+        mapping = {
+            "Common": 50,
+            "Rare": 200,
+            "Epic": 500,
+            "Legendary": 2000
+        }
+        return mapping.get(rarity, 50)
+        
         self.logger.debug(
             "User %s gacha results %s, balance %s, near_miss: %s", 
             user_id, results, balance, near_miss_occurred
@@ -233,6 +370,19 @@ class GachaService:
             psychological_message=psychological_message
         )
 
+    def _determine_rarity(self, rates: Dict[str, int]) -> str:
+        """확률에 따라 희귀도 결정"""
+        total = sum(rates.values())
+        rand = random.randint(1, total)
+        
+        cumulative = 0
+        for rarity, rate in rates.items():
+            cumulative += rate
+            if rand <= cumulative:
+                return rarity
+        
+        return list(rates.keys())[-1]  # 기본값
+    
     def get_user_gacha_stats(self, user_id: int) -> Dict[str, any]:
         """유저 가챠 통계 정보 반환"""
         current_count = self.repo.get_gacha_count(user_id)
@@ -268,3 +418,90 @@ class GachaService:
             return "보통"
         else:
             return "다음엔 더 좋을 거예요!"
+
+    def spin_gacha(self, user_id: int, gacha_type: str, count: int = 1) -> Dict[str, Any]:
+        """가챠 실행"""
+        if gacha_type not in self.GACHA_CONFIG:
+            raise ValueError(f"Invalid gacha type: {gacha_type}")
+        
+        config = self.GACHA_CONFIG[gacha_type]
+        total_cost = config["cost"] * count
+        currency = config["currency"]
+        
+        # 사용자 잔액 확인
+        user = self.user_service.get_user_by_id(user_id)
+        if currency == "COIN":
+            if user.cyber_tokens < total_cost:
+                raise ValueError("Insufficient coins")
+            # 코인 차감
+            user.cyber_tokens -= total_cost
+        elif currency == "GEM":
+            if user.premium_gems < total_cost:
+                raise ValueError("Insufficient gems")
+            # 젬 차감
+            user.premium_gems -= total_cost
+        
+        # 가챠 실행
+        items = []
+        for _ in range(count):
+            rarity = self._determine_rarity(config["rates"])
+            item = random.choice(self.GACHA_ITEMS[rarity])
+            items.append({
+                "rarity": rarity,
+                "item": item,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            
+            # 가챠 기록 저장
+            gacha_log = models.GachaLog(
+                user_id=user_id,
+                gacha_type=gacha_type,
+                item_rarity=rarity,
+                item_name=item["name"],
+                item_type=item["type"],
+                item_value=item["value"],
+                cost=config["cost"],
+                currency=currency,
+                timestamp=datetime.now(timezone.utc)
+            )
+            self.db.add(gacha_log)
+            
+            # 아이템 지급
+            if item["type"] == "COIN":
+                user.cyber_tokens += item["value"]
+            elif item["type"] == "GEM":
+                user.premium_gems += item["value"]
+            else:
+                # 다른 타입의 아이템은 인벤토리에 추가 (추후 구현)
+                pass
+        
+        try:
+            self.db.commit()
+            
+            return {
+                "success": True,
+                "items": items,
+                "total_cost": total_cost,
+                "remaining_balance": user.cyber_tokens if currency == "COIN" else user.premium_gems
+            }
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise e
+    
+    def get_user_gacha_history(self, user_id: int, limit: int = 10) -> List[Dict[str, Any]]:
+        """사용자 가챠 히스토리 조회"""
+        logs = self.db.query(models.GachaLog)\
+            .filter(models.GachaLog.user_id == user_id)\
+            .order_by(models.GachaLog.timestamp.desc())\
+            .limit(limit)\
+            .all()
+        
+        return [
+            {
+                "gacha_type": log.gacha_type,
+                "item_rarity": log.item_rarity,
+                "item_name": log.item_name,
+                "timestamp": log.timestamp.isoformat()
+            }
+            for log in logs
+        ]
