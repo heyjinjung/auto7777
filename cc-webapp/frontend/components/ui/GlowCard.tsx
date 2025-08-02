@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
-import clsx from "clsx";
 
 interface GlowCardProps {
   children: ReactNode;
@@ -11,17 +10,14 @@ interface GlowCardProps {
 
 export default function GlowCard({ 
   children, 
-  className, 
+  className = "", 
   glowColor = "from-pink-500 to-purple-600", 
   onClick 
 }: GlowCardProps) {
   return (
     <div className="relative group">
       <motion.div
-        className={clsx(
-          "absolute inset-0 rounded-xl bg-gradient-to-r opacity-75 blur-lg group-hover:opacity-100 transition-opacity",
-          glowColor
-        )}
+        className={`absolute inset-0 rounded-xl bg-gradient-to-r opacity-75 blur-lg group-hover:opacity-100 transition-opacity ${glowColor}`}
         animate={{ scale: [1, 1.02, 1] }}
         transition={{ 
           repeat: Infinity, 
