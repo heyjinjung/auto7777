@@ -2,13 +2,13 @@ import React from "react";
 import { motion } from "framer-motion";
 
 interface LogoProps {
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   glow?: boolean;
   className?: string;
 }
 
 export default function Logo({ size = "md", glow = false, className = "" }: LogoProps) {
-  const sizeMap = { sm: 32, md: 48, lg: 64 };
+  const sizeMap = { sm: 32, md: 48, lg: 64, xl: 80 };
   const px = sizeMap[size] || 48;
   
   return (

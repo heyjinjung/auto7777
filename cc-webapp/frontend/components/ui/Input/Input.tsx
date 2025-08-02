@@ -2,7 +2,6 @@
 
 import React, { ChangeEvent, forwardRef, ReactNode, useState } from 'react';
 import { motion } from 'framer-motion';
-import clsx from 'clsx';
 
 interface InputProps {
   label?: string; // Make optional
@@ -16,8 +15,8 @@ interface InputProps {
   className?: string;
   value?: string | number;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
-  onFocus?: () => void;
-  onBlur?: () => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   maxLength?: number;
   min?: number;
   max?: number;
@@ -64,19 +63,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             name={name}
             placeholder={placeholder}
             required={required}
-            className={clsx(
-              `block w-full rounded-lg px-4 py-3 text-base
-              ${icon ? 'pl-10' : ''} 
-              ${(validating) || successIcon ? 'pr-10' : ''}
-              border
-              ${hasError 
+            className={`block w-full rounded-lg px-4 py-3 text-base ${
+              icon ? 'pl-10' : ''
+            } ${
+              (validating) || successIcon ? 'pr-10' : ''
+            } border ${
+              hasError 
                 ? 'border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500' 
                 : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500'
-              }
-              dark:bg-gray-800 dark:text-white
-              transition duration-200 ease-in-out
-              ${isFocused ? 'ring-2 ring-indigo-500/30' : ''}
-            `)}
+            } dark:bg-gray-800 dark:text-white transition duration-200 ease-in-out ${
+              isFocused ? 'ring-2 ring-indigo-500/30' : ''
+            }`}
             onFocus={(e) => {
               setIsFocused(true);
               if (props.onFocus) props.onFocus(e);

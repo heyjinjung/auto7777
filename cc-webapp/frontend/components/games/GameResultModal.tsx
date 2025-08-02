@@ -9,19 +9,21 @@ import AnimatedNumber from "@/components/ui/AnimatedNumber";
 interface GameResultModalProps {
   isOpen: boolean;
   onClose: () => void;
-  result: "win" | "lose" | "draw";
-  reward: number;
-  onPlayAgain: () => void;
-  onExploreGames: () => void;
+  result?: any;
+  reward?: number;
+  onPlayAgain?: () => void;
+  onExploreGames?: () => void;
+  onGoToGames?: () => void;
 }
 
 export default function GameResultModal({
   isOpen,
   onClose,
   result,
-  reward,
+  reward = 0,
   onPlayAgain,
-  onExploreGames
+  onExploreGames,
+  onGoToGames
 }: GameResultModalProps) {
   useEffect(() => {
     // 모달이 열리면 배경 스크롤 방지
@@ -72,7 +74,7 @@ export default function GameResultModal({
                     result === "lose" ? "text-red-500" : "text-yellow-500"
                   }`}
                 >
-                  {resultMessages[result]}
+                  {result && resultMessages[result as keyof typeof resultMessages] || "결과"}
                 </motion.h2>
                 
                 {result === "win" && (

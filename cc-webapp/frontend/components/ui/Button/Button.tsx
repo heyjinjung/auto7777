@@ -16,6 +16,8 @@ interface ButtonProps {
   className?: string;
 }
 
+export type { ButtonProps };
+
 const LoadingSpinner = () => (
   <div className="animate-spin">
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24">

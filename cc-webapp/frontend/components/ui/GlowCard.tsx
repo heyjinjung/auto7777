@@ -26,11 +26,7 @@ export default function GlowCard({
         }}
       />
       <div 
-        className={clsx(
-          "relative rounded-xl bg-gray-800/95 backdrop-blur-sm border border-gray-700 overflow-hidden",
-          onClick && "cursor-pointer",
-          className
-        )}
+        className={`relative rounded-xl bg-gray-800/95 backdrop-blur-sm border border-gray-700 overflow-hidden ${onClick ? "cursor-pointer" : ""} ${className}`}
         onClick={onClick}
       >
         {children}

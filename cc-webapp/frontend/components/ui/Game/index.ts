@@ -1,6 +1,6 @@
 // Game Components Index
 export { ReelComponent, SlotMachine } from './ReelComponent';
-export { GameCard, GameGrid } from './GameCard';
+export { GameGrid } from './GameCard';
 export { RewardDisplay, MiniRewardPopup } from './RewardDisplay';
 export { TokenBadge, TokenWallet, ProgressTokenBadge } from './TokenBadge';
 export { BattlePass, BattlePassPreview } from './BattlePass';

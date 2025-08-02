@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface ApiOptions<T> {
   url: string;
@@ -7,10 +7,41 @@ interface ApiOptions<T> {
   headers?: Record<string, string>;
 }
 
-export function useApi() {
+// URL을 받아서 자동으로 GET 요청을 하는 훅
+export function useApi(url?: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    if (url) {
+      fetchData(url);
+    }
+  }, [url]);
+
+  const fetchData = async (endpoint: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(endpoint, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Unknown error"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const request = useCallback(
     async <T, R = any>({ url, method = "GET", body, headers = {} }: ApiOptions<T>) => {

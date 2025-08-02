@@ -7,6 +7,9 @@ import { useSound } from "@/hooks/useSound";
 interface GachaSpinComponentProps {
   onSpinComplete?: (reward: GachaReward) => void;
   cost?: number;
+  isSpinning?: boolean;
+  result?: any;
+  onComplete?: () => void;
 }
 
 interface GachaReward {
@@ -54,7 +57,13 @@ const rarityChances = {
   legendary: 3
 };
 
-export default function GachaSpinComponent({ onSpinComplete, cost = 500 }: GachaSpinComponentProps) {
+export default function GachaSpinComponent({ 
+  onSpinComplete, 
+  cost = 500, 
+  isSpinning: externalIsSpinning, 
+  result: externalResult, 
+  onComplete 
+}: GachaSpinComponentProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [currentReward, setCurrentReward] = useState<GachaReward | null>(null);
   const [showResult, setShowResult] = useState(false);

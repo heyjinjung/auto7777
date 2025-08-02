@@ -8,7 +8,6 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import GlowCard from '@/components/ui/GlowCard';
 import Logo from '@/components/ui/Logo';
-import AnimatedText from '@/components/ui/AnimatedText';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -57,10 +56,9 @@ export default function LoginPage() {
       >
         <div className="text-center mb-8">
           <Logo size="lg" glow className="mx-auto mb-4" />
-          <AnimatedText
-            text="다시 오신 것을 환영합니다!"
-            className="text-3xl font-bold text-white mb-2"
-          />
+          <h1 className="text-3xl font-bold text-white mb-2">
+            다시 오신 것을 환영합니다!
+          </h1>
           <p className="text-gray-400">계속하려면 로그인하세요</p>
         </div>
         
