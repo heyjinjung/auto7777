@@ -13,7 +13,12 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import bcrypt
 import jwt
-import redis
+try:
+    import redis
+    REDIS_AVAILABLE_IMPORT = True
+except ImportError:
+    redis = None
+    REDIS_AVAILABLE_IMPORT = False
 from datetime import datetime, timedelta
 import os
 from typing import Optional
@@ -34,20 +39,24 @@ DB_CONFIG = {
 }
 
 # Redis 연결 설정
-try:
-    redis_client = redis.Redis(
-        host=os.getenv("REDIS_HOST", "cc_redis"),
-        port=int(os.getenv("REDIS_PORT", "6379")),
-        decode_responses=True,
-        socket_timeout=5
-    )
-    redis_client.ping()
-    REDIS_AVAILABLE = True
-except:
+if REDIS_AVAILABLE_IMPORT:
+    try:
+        redis_client = redis.Redis(
+            host=os.getenv("REDIS_HOST", "cc_redis"),
+            port=int(os.getenv("REDIS_PORT", "6379")),
+            decode_responses=True,
+            socket_timeout=5
+        )
+        redis_client.ping()
+        REDIS_AVAILABLE = True
+    except:
+        REDIS_AVAILABLE = False
+        redis_client = None
+else:
     REDIS_AVAILABLE = False
     redis_client = None
 
-router = APIRouter(prefix="", tags=["Simple Auth"])
+router = APIRouter(prefix="", tags=["Authentication"])
 logger = logging.getLogger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -173,7 +182,7 @@ def hash_password(password: str) -> str:
 
 def cache_user_data(user_id: int, data: dict):
     """Redis에 사용자 데이터 캐싱"""
-    if REDIS_AVAILABLE:
+    if REDIS_AVAILABLE and redis_client:
         try:
             redis_client.setex(f"user:{user_id}", 3600, str(data))
         except Exception as e:
@@ -181,7 +190,7 @@ def cache_user_data(user_id: int, data: dict):
 
 def get_cached_user_data(user_id: int):
     """Redis에서 사용자 데이터 조회"""
-    if REDIS_AVAILABLE:
+    if REDIS_AVAILABLE and redis_client:
         try:
             cached_data = redis_client.get(f"user:{user_id}")
             if cached_data:
@@ -191,15 +200,6 @@ def get_cached_user_data(user_id: int):
     return None
 
 # API 엔드포인트들
-@router.get("/health")
-async def health_check():
-    """헬스체크"""
-    return {
-        "status": "healthy", 
-        "message": "PostgreSQL 인증 서버가 정상 작동 중입니다",
-        "redis": "available" if REDIS_AVAILABLE else "unavailable"
-    }
-
 @router.post("/verify-invite")
 async def verify_invite(req: VerifyInviteRequest):
     """초대 코드 검증"""

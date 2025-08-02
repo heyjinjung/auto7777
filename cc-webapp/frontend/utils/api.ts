@@ -12,7 +12,7 @@ import type {
   SlotSpinResponse
 } from '../types/api';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://139.180.155.143:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -96,6 +96,33 @@ export const adultContentAPI = {
   
   getFlashOffers: () => 
     apiClient.get<{ offers: FlashOfferResponseItem[] }>('/adult-content/flash-offers'),
+};
+
+// 🆕 새로운 게임 API들
+export const gachaAPI = {
+  getRates: () => apiClient.get('/api/gacha/rates'),
+  spin: (data: { bet_amount?: number }) => apiClient.post('/api/gacha/spin', data),
+  getHistory: (limit: number = 20) => apiClient.get(`/api/gacha/history?limit=${limit}`)
+};
+
+export const shopAPI = {
+  getItems: (category?: string) => apiClient.get(`/api/shop/items${category ? `?category=${category}` : ''}`),
+  getCategories: () => apiClient.get('/api/shop/categories'),
+  purchase: (data: { item_id: number; quantity: number }) => apiClient.post('/api/shop/buy', data),
+  getHistory: (limit: number = 20) => apiClient.get(`/api/shop/history?limit=${limit}`)
+};
+
+export const battlepassAPI = {
+  getStatus: () => apiClient.get('/api/battlepass/status'),
+  claimReward: (level: number) => apiClient.post(`/api/battlepass/claim/${level}`),
+  upgradeToPremium: () => apiClient.post('/api/battlepass/upgrade')
+};
+
+export const leaderboardAPI = {
+  getLeaderboard: (type: string = 'weekly', limit: number = 100) => 
+    apiClient.get(`/api/leaderboard/${type}?limit=${limit}`),
+  getUserRank: (userId: number) => apiClient.get(`/api/leaderboard/user/${userId}`),
+  getCurrentSeason: () => apiClient.get('/api/leaderboard/seasons/current')
 };
 
 export default apiClient;

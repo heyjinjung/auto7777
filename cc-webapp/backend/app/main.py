@@ -63,17 +63,7 @@ from typing import Optional
 # 라우터 import 추가 - 조건부 로드
 routers_loaded = []
 
-# 1. 인증 라우터
-try:
-    from app.routers import auth
-    AUTH_ROUTER_AVAILABLE = True
-    routers_loaded.append("auth")
-    print("✅ Auth router loaded successfully")
-except Exception as e:
-    print(f"⚠️ Auth router could not be loaded: {e}")
-    AUTH_ROUTER_AVAILABLE = False
-
-# 2. 사용자 라우터
+# 1. 사용자 라우터
 try:
     from app.routers import users
     USERS_ROUTER_AVAILABLE = True
@@ -83,8 +73,8 @@ except Exception as e:
     print(f"⚠️ Users router could not be loaded: {e}")
     USERS_ROUTER_AVAILABLE = False
 
-# 3. 게임 라우터들
-# 3.1 RPS (가위바위보) 게임
+# 2. 게임 라우터들
+# 2.1 RPS (가위바위보) 게임
 try:
     from app.routers import rps
     RPS_ROUTER_AVAILABLE = True
@@ -94,17 +84,19 @@ except Exception as e:
     print(f"⚠️ RPS router could not be loaded: {e}")
     RPS_ROUTER_AVAILABLE = False
 
-# 3.2 슬롯 게임
+# 2.2 슬롯 게임
 try:
-    from app.routers import slots
-    SLOTS_ROUTER_AVAILABLE = True
+    from app.routers import slots as slot
+    SLOT_ROUTER_AVAILABLE = True
+    SLOTS_ROUTER_AVAILABLE = True  # 기존 호환성
     routers_loaded.append("slots")
     print("✅ Slots game router loaded successfully")
 except Exception as e:
     print(f"⚠️ Slots router could not be loaded: {e}")
+    SLOT_ROUTER_AVAILABLE = False
     SLOTS_ROUTER_AVAILABLE = False
 
-# 3.3 룰렛 게임
+# 2.3 룰렛 게임
 try:
     from app.routers import roulette
     ROULETTE_ROUTER_AVAILABLE = True
@@ -114,7 +106,17 @@ except Exception as e:
     print(f"⚠️ Roulette router could not be loaded: {e}")
     ROULETTE_ROUTER_AVAILABLE = False
 
-# 4. 가챠 라우터
+# 4. 통합 게임 라우터
+try:
+    from app.routers import games
+    GAMES_ROUTER_AVAILABLE = True
+    routers_loaded.append("games")
+    print("✅ Games router loaded successfully")
+except Exception as e:
+    print(f"⚠️ Games router could not be loaded: {e}")
+    GAMES_ROUTER_AVAILABLE = False
+
+# 5. 가챠 라우터
 try:
     from app.routers import gacha
     GACHA_ROUTER_AVAILABLE = True
@@ -124,7 +126,7 @@ except Exception as e:
     print(f"⚠️ Gacha router could not be loaded: {e}")
     GACHA_ROUTER_AVAILABLE = False
 
-# 5. 상점 라우터
+# 6. 상점 라우터
 try:
     from app.routers import shop
     SHOP_ROUTER_AVAILABLE = True
@@ -134,7 +136,7 @@ except Exception as e:
     print(f"⚠️ Shop router could not be loaded: {e}")
     SHOP_ROUTER_AVAILABLE = False
 
-# 6. 배틀패스 라우터
+# 7. 배틀패스 라우터
 try:
     from app.routers import battlepass
     BATTLEPASS_ROUTER_AVAILABLE = True
@@ -144,7 +146,7 @@ except Exception as e:
     print(f"⚠️ BattlePass router could not be loaded: {e}")
     BATTLEPASS_ROUTER_AVAILABLE = False
 
-# 7. 보상 라우터
+# 8. 보상 라우터
 try:
     from app.routers import rewards
     REWARDS_ROUTER_AVAILABLE = True
@@ -154,7 +156,7 @@ except Exception as e:
     print(f"⚠️ Rewards router could not be loaded: {e}")
     REWARDS_ROUTER_AVAILABLE = False
 
-# 8. 대시보드 라우터
+# 9. 대시보드 라우터
 try:
     from app.routers import dashboard
     DASHBOARD_ROUTER_AVAILABLE = True
@@ -258,14 +260,6 @@ app = FastAPI(
     },
     tags_metadata=[
         {
-            "name": "Simple Auth",
-            "description": "사용자 인증 및 계정 관리 API",
-            "externalDocs": {
-                "description": "인증 시스템 가이드",
-                "url": "/docs/auth-guide",
-            },
-        },
-        {
             "name": "Users",
             "description": "사용자 프로필 및 정보 관리 API",
         },
@@ -284,6 +278,10 @@ app = FastAPI(
         {
             "name": "System",
             "description": "시스템 상태 확인 및 모니터링",
+        },
+        {
+            "name": "Dashboard",
+            "description": "대시보드 통계 및 분석 정보",
         },
     ]
 )
@@ -361,15 +359,7 @@ if GAMES_ROUTER_AVAILABLE:
     except Exception as e:
         print(f"❌ Failed to register games router: {e}")
 
-# 5. 가챠 라우터 (새로 추가)
-try:
-    from app.routers import gacha
-    app.include_router(gacha.router, prefix="/api/gacha", tags=["Gacha"])
-    print("✅ Gacha router registered")
-except Exception as e:
-    print(f"❌ Failed to register gacha router: {e}")
-
-# 6. 개별 게임 라우터들
+# 5. 개별 게임 라우터들
 if RPS_ROUTER_AVAILABLE:
     try:
         app.include_router(rps.router, prefix="/api/games/rps", tags=["RPS Game"])
@@ -390,6 +380,14 @@ if SLOT_ROUTER_AVAILABLE:
         print("✅ Slot router registered")
     except Exception as e:
         print(f"❌ Failed to register slot router: {e}")
+
+# 6. 가챠 라우터
+if GACHA_ROUTER_AVAILABLE:
+    try:
+        app.include_router(gacha.router, prefix="/api/gacha", tags=["Gacha"])
+        print("✅ Gacha router registered")
+    except Exception as e:
+        print(f"❌ Failed to register gacha router: {e}")
 
 # 7. 상점 라우터
 try:
@@ -440,41 +438,6 @@ async def publish_user_action_event(event: UserActionEvent = Body(...)):
     """
     send_kafka_message("user_actions", event.model_dump())
     return {"status": "ok", "message": "Event published to Kafka", "event": event.model_dump()}
-
-# Request/Response Models
-class UserLogin(BaseModel):
-    """사용자 로그인 스키마"""
-
-    user_id: str
-    password: str
-
-
-class LoginResponse(BaseModel):
-    """로그인 응답 스키마"""
-
-    token: str
-    user_id: str
-    message: Optional[str] = None
-
-
-@app.post("/login", response_model=LoginResponse, tags=["Authentication"])
-async def login(user: UserLogin):
-    """
-    사용자 로그인 엔드포인트
-
-    - **user_id**: 사용자 ID
-    - **password**: 비밀번호
-    - 성공 시 JWT 토큰 반환
-    """
-    # 실제 로직은 추후 구현
-    if user.user_id == "test" and user.password == "password":
-        return {
-            "token": "sample_jwt_token",
-            "user_id": user.user_id,
-            "message": "로그인 성공",
-        }
-    raise HTTPException(status_code=401, detail="인증 실패")
-
 
 @app.get("/health", tags=["System"])
 @app.head("/health", tags=["System"])
