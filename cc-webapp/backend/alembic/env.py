@@ -1,81 +1,59 @@
 
+# -*- coding: utf-8 -*-
+"""
+Alembic Environment Configuration
+데이터베이스 마이그레이션 환경 설정
+"""
+
 import os
 import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from dotenv import load_dotenv
-load_dotenv() # Load .env file
-
 from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
+from sqlalchemy import engine_from_config, pool
 from alembic import context
+from dotenv import load_dotenv
 
-# Import Base directly from models.py instead of models package
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# 환경변수 로드
+load_dotenv()
 
+# 백엔드 앱 경로 추가
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# 모델 임포트
 from app.models import Base
-target_metadata = Base.metadata # Configure Alembic to use your models' metadata
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# Alembic 설정 객체
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
+# 메타데이터 설정
+target_metadata = Base.metadata
+
+# 데이터베이스 URL 환경변수에서 설정
+DB_USER = os.getenv("DB_USER", "cc_user")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "cc_secret_password_2025")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME", "cc_webapp")
+
+database_url = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+config.set_main_option("sqlalchemy.url", database_url)
+
+# 로깅 설정
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-# target_metadata = None # This line is now handled above
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
-
-def get_database_url():
-    """환경에 따른 데이터베이스 URL 반환"""
-    # Docker/Production 환경 - PostgreSQL
-    if os.getenv('DB_HOST'):
-        db_host = os.getenv('DB_HOST', 'localhost')
-        db_port = os.getenv('DB_PORT', '5432')
-        db_name = os.getenv('DB_NAME', 'cc_webapp')
-        db_user = os.getenv('DB_USER', 'cc_user')
-        db_password = os.getenv('DB_PASSWORD', 'cc_password')
-        return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    
-    # 개발 환경 fallback - SQLite
-    return os.getenv("DATABASE_URL", "sqlite:///./auth.db")
-
-db_url = get_database_url()
-print(f"🗄️ Alembic 데이터베이스 URL: {db_url.split('@')[-1] if '@' in db_url else db_url}")
-
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
-
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-
     """
-    # url = config.get_main_option("sqlalchemy.url")
+    오프라인 모드에서 마이그레이션 실행
+    """
+    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=db_url,
+        url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
+        compare_server_default=True,
     )
 
     with context.begin_transaction():
@@ -83,34 +61,25 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
-
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
     """
-    # connectable = engine_from_config(
-    #     config.get_section(config.config_ini_section, {}),
-    #     prefix="sqlalchemy.",
-    #     poolclass=pool.NullPool,
-    # )
-
-    # Create a new section in the config for the database URL
-    # if it doesn't already exist.
-    section = config.config_ini_section
-    if not config.get_section(section): # Changed has_section to get_section
-        config.add_section(section)
-    config.set_section_option(section, "sqlalchemy.url", db_url)
-
+    온라인 모드에서 마이그레이션 실행
+    """
     connectable = engine_from_config(
-        config.get_section(section), # Use the modified section
+        config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args={
+            "client_encoding": "utf8",
+            "application_name": "cc_webapp_alembic"
+        }
     )
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,
+            compare_server_default=True,
         )
 
         with context.begin_transaction():
@@ -120,4 +89,5 @@ def run_migrations_online() -> None:
 if context.is_offline_mode():
     run_migrations_offline()
 else:
+    run_migrations_online()
     run_migrations_online()

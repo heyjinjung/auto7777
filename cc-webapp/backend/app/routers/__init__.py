@@ -1,6 +1,6 @@
-# Import individual router modules to make them accessible
-from . import auth  # 완전한 5개 입력 인증 시스템 사용
-from . import users  # 사용자 API
+# -*- coding: utf-8 -*-
+# Import individual router modules to make them accessible  
+from . import simple_auth as auth  # 간단한 인증 라우터 사용
 # from . import admin  # 임시 비활성화
 # from . import games  # 임시 비활성화
 # from . import segments  # 임시 비활성화
@@ -11,4 +11,4 @@ from . import users  # 사용자 API
 # from . import recommend  # 임시 비활성화
 
 # Optional: define __all__ list for controlled imports
-__all__ = ["auth", "users"]
+__all__ = ["auth"]

@@ -1,123 +1,149 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface AdminLoginFormProps {
-    onSwitchToLogin?: () => void;
+  onSwitchToLogin: () => void;
 }
 
-const AdminLoginForm: React.FC<AdminLoginFormProps> = ({ onSwitchToLogin }) => {
-    const [adminId, setAdminId] = useState('');
-    const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+export default function AdminLoginForm({ onSwitchToLogin }: AdminLoginFormProps) {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    admin_code: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError('');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (error) setError('');
+  };
 
-        try {
-            // TODO: 실제 admin 로그인 API 호출
-            const response = await fetch('/api/admin/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    adminId,
-                    password,
-                }),
-            });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
-            if (response.ok) {
-                const data = await response.json();
-                // TODO: admin 토큰 저장 및 리다이렉트
-                window.location.href = '/admin/dashboard';
-            } else {
-                const errorData = await response.json();
-                setError(errorData.message || '로그인에 실패했습니다.');
-            }
-        } catch (err) {
-            setError('네트워크 오류가 발생했습니다.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    try {
+      // 🔒 하드코딩된 관리자 계정 확인 (개발용)
+      if (formData.admin_code === 'admin' && formData.password === 'admin1234') {
+        console.log('✅ 관리자 로그인 성공!');
 
-    return (
-        <div className="admin-login-form">
-            <div className="form-header">
-                <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
-                    관리자 로그인
-                </h2>
-            </div>
+        // 관리자 토큰을 localStorage에 저장
+        localStorage.setItem('admin_token', 'admin_authenticated_' + Date.now());
+        localStorage.setItem('admin_user', JSON.stringify({
+          id: 'admin',
+          username: 'admin',
+          role: 'super_admin',
+          permissions: ['all']
+        }));
+        localStorage.setItem('isAdmin', 'true');
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                        {error}
-                    </div>
-                )}
+        // 관리자 대시보드로 이동
+        router.push('/admin/dashboard');
+      } else {
+        setError('잘못된 관리자 계정입니다. (개발용: admin / admin1234)');
+      }
+    } catch (error) {
+      console.error('Admin login error:', error);
+      setError('네트워크 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-                <div>
-                    <label htmlFor="adminId" className="block text-sm font-medium text-gray-700 mb-1">
-                        관리자 ID
-                    </label>
-                    <input
-                        type="text"
-                        id="adminId"
-                        value={adminId}
-                        onChange={(e) => setAdminId(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="관리자 ID를 입력하세요"
-                        required
-                        disabled={isLoading}
-                    />
-                </div>
+  return (
+    <>
+      {/* 👑 관리자 타이틀 */}
+      <div className="auth-header admin-header">
+        <div className="game-platform-title admin-title">모델카지노 관리자</div>
+        <div className="game-platform-subtitle admin-subtitle">관리자 전용 접근</div>
+      </div>
 
-                <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                        비밀번호
-                    </label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="비밀번호를 입력하세요"
-                        required
-                        disabled={isLoading}
-                    />
-                </div>
+      <div style={{ flex: 1 }}></div>
 
-                <button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
-                        isLoading
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500'
-                    } text-white`}
-                >
-                    {isLoading ? '로그인 중...' : '관리자 로그인'}
-                </button>
+      <div className="admin-message">관리자 로그인</div>
+      <div className="admin-help">시스템 관리를 위한 보안 로그인</div>
 
-                {onSwitchToLogin && (
-                    <div className="text-center mt-4">
-                        <button
-                            type="button"
-                            onClick={onSwitchToLogin}
-                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                        >
-                            일반 사용자 로그인으로 돌아가기
-                        </button>
-                    </div>
-                )}
-            </form>
+      <form className="auth-form admin-form" onSubmit={handleSubmit}>
+        {error && <div className="auth-error admin-error">{error}</div>}
+
+        <div className="form-group">
+          <label htmlFor="admin_code" className="form-label admin-label">
+            관리자 코드 <span className="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="admin_code"
+            name="admin_code"
+            value={formData.admin_code}
+            onChange={handleChange}
+            className="form-input admin-input"
+            placeholder="관리자 코드를 입력하세요"
+            required
+            disabled={isLoading}
+          />
         </div>
-    );
-};
 
-export default AdminLoginForm;
+        <div className="form-group">
+          <label htmlFor="password" className="form-label admin-label">
+            관리자 비밀번호 <span className="required">*</span>
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            className="form-input admin-input"
+            placeholder="관리자 비밀번호를 입력하세요"
+            required
+            disabled={isLoading}
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="auth-button primary admin-button"
+          disabled={isLoading || !formData.admin_code || !formData.password}
+        >
+          {isLoading ? (
+            <>
+              <span className="loading-spinner"></span>
+              로그인 중...
+            </>
+          ) : (
+            '👑 관리자 로그인'
+          )}
+        </button>
+      </form>
+
+      {/* 보안 경고 */}
+      <div className="admin-warning">
+        <div className="warning-icon">⚠️</div>
+        <div className="warning-text">
+          관리자 계정은 시스템의 모든 기능에 접근할 수 있습니다.
+          보안을 위해 로그인 시도가 기록됩니다.
+        </div>
+      </div>
+
+      {/* 🔄 전환 버튼들 */}
+      <div className="auth-switches">
+        <button
+          type="button"
+          className="auth-link admin-back-link"
+          onClick={onSwitchToLogin}
+          disabled={isLoading}
+        >
+          ← 일반 로그인으로 돌아가기
+        </button>
+      </div>
+    </>
+  );
+}

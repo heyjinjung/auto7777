@@ -1,0 +1,33 @@
+# 🎰 Casino-Club F2P Backend - 핵심 의존성만 (빠른 빌드)
+
+# FastAPI 및 웹 프레임워크
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# 데이터베이스 관련
+sqlalchemy==2.0.23
+alembic==1.13.0
+psycopg2-binary==2.9.9
+
+# Redis 및 캐싱
+redis==5.0.1
+
+# 인증 및 보안
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+PyJWT==2.8.0
+
+# HTTP 클라이언트
+httpx==0.25.2
+requests==2.31.0
+
+# 날짜/시간 처리
+python-dateutil==2.8.2
+
+# JSON 처리
+python-multipart==0.0.6
+
+# CORS 처리
+python-dotenv==1.0.0

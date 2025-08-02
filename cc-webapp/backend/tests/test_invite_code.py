@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from app.main import app
 from app.database import Base
 from app.dependencies import get_db
-from app.models.invite_code import InviteCode
+from app.models import InviteCode
 
 # Set up test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_invite.db"
