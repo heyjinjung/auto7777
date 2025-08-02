@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 컨텐츠 관리 모델들
 - 성인 컨텐츠, VIP 액세스, 구매 등
@@ -6,7 +7,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey, Text, Index
 from sqlalchemy.orm import relationship
-from .auth_clean import Base
+from app.database import Base
 
 
 class AdultContent(Base):

@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 """
 JWT 인증 고급 기능 모델
+- 사용자 관리
 - 로그인 시도 제한
 - 리프레시 토큰 관리
 - 세션 관리
@@ -10,6 +12,31 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, I
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
+
+
+class User(Base):
+    """사용자 모델"""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    site_id = Column(String(50), unique=True, nullable=False, index=True)  # 로그인용 사이트ID 추가
+    nickname = Column(String(50), unique=True, nullable=False)
+    phone_number = Column(String(20), unique=True, nullable=False, index=True)  # 실제 전화번호
+    password_hash = Column(String(100), nullable=False)  # 비밀번호 해시 추가
+    invite_code = Column(String(6), nullable=False, index=True)  # 초대코드로 가입
+    cyber_token_balance = Column(Integer, default=200)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login_at = Column(DateTime, nullable=True)  # 최근 로그인 시간
+    # 랭크 시스템 - VIP, PREMIUM, STANDARD 등
+    rank = Column(String(20), default="STANDARD", nullable=False)
+
+    # Relationships
+    actions = relationship("UserAction", back_populates="user")
+    segment = relationship("UserSegment", uselist=False, back_populates="user") # One-to-one
+    site_visits = relationship("SiteVisit", back_populates="user")
+    notifications = relationship("Notification", back_populates="user")
+    flash_offers = relationship("FlashOffer", back_populates="user")
+    vip_access_logs = relationship("VIPAccessLog", back_populates="user")
 
 
 class LoginAttempt(Base):
@@ -97,7 +124,7 @@ class SecurityEvent(Base):
     description = Column(String(500), nullable=False)
     ip_address = Column(String(45), nullable=False, index=True)
     user_agent = Column(String(500), nullable=True)
-    metadata = Column(String(1000), nullable=True)  # JSON 문자열로 추가 정보 저장
+    event_metadata = Column(String(1000), nullable=True)  # JSON 문자열로 추가 정보 저장
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     
     # 관계
@@ -108,4 +135,24 @@ class SecurityEvent(Base):
         Index("ix_security_events_type_created_at", "event_type", "created_at"),
         Index("ix_security_events_severity_created_at", "severity", "created_at"),
         Index("ix_security_events_user_id_created_at", "user_id", "created_at"),
+    )
+
+
+class InviteCode(Base):
+    """초대코드 관리 테이블"""
+    __tablename__ = "invite_codes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String(6), unique=True, nullable=False, index=True)
+    is_used = Column(Boolean, default=False, nullable=False, index=True)
+    used_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    
+    # 관계
+    used_by = relationship("User")
+    
+    # 인덱스
+    __table_args__ = (
+        Index("ix_invite_codes_is_used", "is_used"),
     )

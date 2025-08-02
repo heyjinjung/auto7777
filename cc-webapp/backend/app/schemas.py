@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Pydantic schemas for FastAPI request/response models."""
 
 from pydantic import BaseModel, Field, ConfigDict
@@ -59,11 +60,6 @@ class InviteCodeList(BaseModel):
     total: int
     used_count: int
     available_count: int
-    
-    id: int
-    code: str
-    is_used: bool
-    created_at: datetime
 
 # Game related schemas
 class GameType(str, Enum):
@@ -132,11 +128,6 @@ class AdultContentStageBase(BaseModel):
     cost: int
     description: str
     is_unlocked: bool = False
-
-# Removed duplicate AdultContentGalleryItem - using the one at the end of file
-    name: Optional[str] = None
-    thumbnail_url: Optional[str] = None
-    highest_unlocked_stage: Optional[int] = None
 
 class AdultContentDetail(BaseModel):
     id: int

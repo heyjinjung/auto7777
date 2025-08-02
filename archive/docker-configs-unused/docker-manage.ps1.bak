@@ -1,0 +1,378 @@
+# Casino-Club F2P Docker 관리 스크립트 v2.0
+param(
+    [Parameter(Position=0)]
+    [string]$Command = "help",
+    
+    [Parameter(Position=1)]
+    [string]$Service = "",
+    
+    [switch]$Tools,
+    [switch]$Force
+)
+
+$ErrorActionPreference = "Stop"
+
+# 컬러 출력 함수
+function Write-ColoredOutput {
+    param([string]$Message, [string]$Color = "White")
+    Write-Host $Message -ForegroundColor $Color
+}
+
+function Show-Help {
+    Write-ColoredOutput "🎰 Casino-Club F2P Docker 관리 도구" "Cyan"
+    Write-ColoredOutput "=" * 50 "Gray"
+    Write-ColoredOutput "사용법: .\docker-manage.ps1 <명령어> [옵션]" "Yellow"
+    Write-ColoredOutput ""
+    Write-ColoredOutput "📋 주요 명령어:" "Green"
+    Write-ColoredOutput "  setup           - 초기 환경 설정" "White"
+    Write-ColoredOutput "  start           - 서비스 시작" "White"
+    Write-ColoredOutput "  stop            - 서비스 정지" "White"
+    Write-ColoredOutput "  restart         - 서비스 재시작" "White"
+    Write-ColoredOutput "  status          - 서비스 상태 확인" "White"
+    Write-ColoredOutput "  logs            - 로그 확인" "White"
+    Write-ColoredOutput "  shell           - 컨테이너 접속" "White"
+    Write-ColoredOutput "  migrate         - 데이터베이스 마이그레이션" "White"
+    Write-ColoredOutput "  new-migration   - 새 마이그레이션 생성" "White"
+    Write-ColoredOutput "  backup          - 데이터베이스 백업" "White"
+    Write-ColoredOutput "  reset           - 완전 초기화" "White"
+    Write-ColoredOutput "  clean           - 정리 작업" "White"
+    Write-ColoredOutput ""
+    Write-ColoredOutput "🔧 옵션:" "Green"
+    Write-ColoredOutput "  --tools      - 개발 도구 포함 (pgAdmin, Redis Commander)" "White"
+    Write-ColoredOutput "  --force      - 강제 실행" "White"
+    Write-ColoredOutput ""
+    Write-ColoredOutput "📚 예제:" "Green"
+    Write-ColoredOutput "  .\docker-manage.ps1 start --tools" "Gray"
+    Write-ColoredOutput "  .\docker-manage.ps1 logs backend" "Gray"
+    Write-ColoredOutput "  .\docker-manage.ps1 shell backend" "Gray"
+    Write-ColoredOutput "  .\docker-manage.ps1 migrate --force" "Gray"
+    Write-ColoredOutput "  .\docker-manage.ps1 new-migration 'Add user tables'" "Gray"
+    Write-ColoredOutput "  .\docker-manage.ps1 backup" "Gray"
+    Write-ColoredOutput "  .\docker-manage.ps1 reset --force" "Gray"
+}
+
+function Test-DockerRunning {
+    try {
+        docker info | Out-Null
+        return $true
+    } catch {
+        Write-ColoredOutput "❌ Docker가 실행되지 않았습니다. Docker Desktop을 시작해주세요." "Red"
+        exit 1
+    }
+}
+
+function Setup-Environment {
+    Write-ColoredOutput "🚀 Casino-Club F2P 환경 설정 시작..." "Cyan"
+    
+    # Docker 상태 확인
+    Test-DockerRunning
+    
+    # 필수 디렉토리 생성
+    $directories = @(
+        "logs/backend",
+        "logs/frontend", 
+        "logs/postgres",
+        "logs/celery",
+        "data/init",
+        "data/backup"
+    )
+    
+    foreach ($dir in $directories) {
+        if (!(Test-Path $dir)) {
+            New-Item -ItemType Directory -Path $dir -Force | Out-Null
+            Write-ColoredOutput "📁 디렉토리 생성: $dir" "Green"
+        } else {
+            Write-ColoredOutput "📁 디렉토리 존재: $dir" "Gray"
+        }
+    }
+    
+    # 환경변수 파일 확인
+    if (!(Test-Path ".env.development")) {
+        Write-ColoredOutput "⚠️ .env.development 파일이 없습니다." "Yellow"
+        Write-ColoredOutput "가이드를 참고하여 .env.development 파일을 생성해주세요." "Yellow"
+    } else {
+        Write-ColoredOutput "✅ .env.development 파일 존재" "Green"
+    }
+    
+    # Docker Compose 설정 검증
+    Write-ColoredOutput "🔍 Docker Compose 설정 검증..." "Cyan"
+    try {
+        docker-compose config --quiet
+        Write-ColoredOutput "✅ Docker Compose 설정 유효" "Green"
+    } catch {
+        Write-ColoredOutput "❌ Docker Compose 설정 오류: $($_.Exception.Message)" "Red"
+        return
+    }
+    
+    Write-ColoredOutput "✅ 환경 설정 완료!" "Green"
+}
+
+function Start-Services {
+    Write-ColoredOutput "🚀 서비스 시작..." "Cyan"
+    
+    Test-DockerRunning
+    
+    $composeArgs = @("up", "-d", "--build")
+    
+    if ($Tools) {
+        $composeArgs += "--profile"
+        $composeArgs += "tools"
+        Write-ColoredOutput "🛠️ 개발 도구 포함하여 시작..." "Yellow"
+    }
+    
+    try {
+        & docker-compose @composeArgs
+        Start-Sleep -Seconds 5
+        Write-ColoredOutput "✅ 서비스 시작 완료!" "Green"
+        Show-ServiceStatus
+    } catch {
+        Write-ColoredOutput "❌ 서비스 시작 실패: $($_.Exception.Message)" "Red"
+        exit 1
+    }
+}
+
+function Stop-Services {
+    Write-ColoredOutput "🛑 서비스 정지..." "Cyan"
+    
+    try {
+        docker-compose down
+        Write-ColoredOutput "✅ 서비스 정지 완료!" "Green"
+    } catch {
+        Write-ColoredOutput "❌ 서비스 정지 실패: $($_.Exception.Message)" "Red"
+    }
+}
+
+function Show-ServiceStatus {
+    Write-ColoredOutput "📊 서비스 상태:" "Cyan"
+    docker-compose ps
+    
+    Write-ColoredOutput "`n🌐 서비스 URL:" "Cyan"
+    Write-ColoredOutput "  Frontend:    http://localhost:3000" "Green"
+    Write-ColoredOutput "  Backend API: http://localhost:8000" "Green"
+    Write-ColoredOutput "  API Docs:    http://localhost:8000/docs" "Green"
+    
+    if ($Tools) {
+        Write-ColoredOutput "  pgAdmin:     http://localhost:5050" "Yellow"
+        Write-ColoredOutput "  Redis UI:    http://localhost:8081" "Yellow"
+    }
+}
+
+function Show-Logs {
+    if ($Service) {
+        Write-ColoredOutput "📋 $Service 로그:" "Cyan"
+        docker-compose logs -f $Service
+    } else {
+        Write-ColoredOutput "📋 전체 로그:" "Cyan"
+        docker-compose logs -f
+    }
+}
+
+function Enter-Shell {
+    if (!$Service) {
+        Write-ColoredOutput "❌ 서비스명을 지정해주세요." "Red"
+        Write-ColoredOutput "사용 가능한 서비스: backend, frontend, postgres, redis" "Yellow"
+        return
+    }
+    
+    $containerName = switch ($Service.ToLower()) {
+        "backend" { "cc_backend" }
+        "frontend" { "cc_frontend" }
+        "postgres" { "cc_postgres" }
+        "redis" { "cc_redis" }
+        default { 
+            Write-ColoredOutput "❌ 알 수 없는 서비스: $Service" "Red"
+            return
+        }
+    }
+    
+    Write-ColoredOutput "🔗 $Service 컨테이너에 접속합니다..." "Cyan"
+    
+    # 컨테이너 실행 상태 확인
+    $containerStatus = docker ps --filter "name=$containerName" --format "{{.Status}}"
+    if (!$containerStatus) {
+        Write-ColoredOutput "❌ $Service 컨테이너가 실행되지 않았습니다." "Red"
+        Write-ColoredOutput "다음 명령어로 서비스를 시작하세요: .\docker-manage.ps1 start" "Yellow"
+        return
+    }
+    
+    # 적절한 쉘 선택
+    if ($Service.ToLower() -eq "backend" -or $Service.ToLower() -eq "frontend") {
+        docker exec -it $containerName bash
+    } elseif ($Service.ToLower() -eq "postgres") {
+        Write-ColoredOutput "PostgreSQL 컨테이너 접속 (psql 사용):" "Yellow"
+        docker exec -it $containerName psql -U $env:DB_USER -d $env:DB_NAME
+    } else {
+        docker exec -it $containerName sh
+    }
+}
+
+function Run-Migration {
+    Write-ColoredOutput "🗄️ 데이터베이스 마이그레이션 실행..." "Cyan"
+    
+    # 백엔드 컨테이너 상태 확인
+    $containerStatus = docker ps --filter "name=cc_backend" --format "{{.Status}}"
+    if (!$containerStatus) {
+        Write-ColoredOutput "❌ 백엔드 컨테이너가 실행되지 않았습니다." "Red"
+        Write-ColoredOutput "다음 명령어로 서비스를 시작하세요: .\docker-manage.ps1 start" "Yellow"
+        return
+    }
+    
+    try {
+        Write-ColoredOutput "📜 마이그레이션 히스토리 확인..." "Yellow"
+        docker exec cc_backend alembic history
+        
+        Write-ColoredOutput "🔍 현재 리비전 확인..." "Yellow" 
+        docker exec cc_backend alembic current
+        
+        if ($Force) {
+            Write-ColoredOutput "🚀 강제 마이그레이션 (stamp head)..." "Yellow"
+            docker exec cc_backend alembic stamp head
+        }
+        
+        Write-ColoredOutput "🔄 마이그레이션 업그레이드..." "Yellow"
+        docker exec cc_backend alembic upgrade head
+        
+        Write-ColoredOutput "✅ 마이그레이션 완료!" "Green"
+        
+        Write-ColoredOutput "📊 최종 상태:" "Cyan"
+        docker exec cc_backend alembic current --verbose
+        
+    } catch {
+        Write-ColoredOutput "❌ 마이그레이션 실패: $($_.Exception.Message)" "Red"
+        Write-ColoredOutput "💡 다음 명령어로 수동 확인: .\docker-manage.ps1 shell backend" "Yellow"
+    }
+}
+
+function Create-Migration {
+    param([string]$Message = "Auto-generated migration")
+    
+    Write-ColoredOutput "🆕 새 마이그레이션 생성..." "Cyan"
+    
+    # 백엔드 컨테이너 상태 확인
+    $containerStatus = docker ps --filter "name=cc_backend" --format "{{.Status}}"
+    if (!$containerStatus) {
+        Write-ColoredOutput "❌ 백엔드 컨테이너가 실행되지 않았습니다." "Red"
+        return
+    }
+    
+    try {
+        Write-ColoredOutput "📝 마이그레이션 파일 생성: $Message" "Yellow"
+        docker exec cc_backend alembic revision --autogenerate -m "$Message"
+        
+        Write-ColoredOutput "📜 업데이트된 히스토리:" "Yellow"
+        docker exec cc_backend alembic history | Select-Object -First 3
+        
+        Write-ColoredOutput "✅ 마이그레이션 파일 생성 완료!" "Green"
+        
+    } catch {
+        Write-ColoredOutput "❌ 마이그레이션 생성 실패: $($_.Exception.Message)" "Red"
+    }
+}
+
+function Backup-Database {
+    Write-ColoredOutput "💾 데이터베이스 백업 시작..." "Cyan"
+    
+    # PostgreSQL 컨테이너 실행 상태 확인
+    $containerStatus = docker ps --filter "name=cc_postgres" --format "{{.Status}}"
+    if (!$containerStatus) {
+        Write-ColoredOutput "❌ PostgreSQL 컨테이너가 실행되지 않았습니다." "Red"
+        Write-ColoredOutput "다음 명령어로 서비스를 시작하세요: .\docker-manage.ps1 start" "Yellow"
+        return
+    }
+    
+    # 백업 파일명 생성 (타임스탬프 포함)
+    $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $backupFile = "data/backup/cc_webapp_backup_$timestamp.sql"
+    
+    Write-ColoredOutput "📁 백업 파일: $backupFile" "Yellow"
+    
+    # pg_dump 실행
+    docker exec cc_postgres pg_dump -U cc_user -d cc_webapp > $backupFile
+    
+    if (Test-Path $backupFile) {
+        $fileSize = [math]::Round((Get-Item $backupFile).Length / 1MB, 2)
+        Write-ColoredOutput "✅ 백업 완료! (크기: $fileSize MB)" "Green"
+    } else {
+        Write-ColoredOutput "❌ 백업 실패!" "Red"
+    }
+}
+
+function Enter-Shell {
+    if (-not $Service) {
+        Write-ColoredOutput "❌ 서비스 이름을 지정해주세요. 예: .\docker-manage.ps1 shell backend" "Red"
+        return
+    }
+    
+    Write-ColoredOutput "🐚 $Service 컨테이너 접속..." "Cyan"
+    
+    $containerName = switch ($Service.ToLower()) {
+        "backend" { "auto7777-backend-1" }
+        "frontend" { "auto7777-frontend-1" }
+        "postgres" { "cc_postgres" }
+        "redis" { "cc_redis" }
+        default { $Service }
+    }
+    
+    try {
+        docker exec -it $containerName bash
+    } catch {
+        Write-ColoredOutput "❌ 컨테이너 접속 실패. 컨테이너가 실행 중인지 확인해주세요." "Red"
+        Show-ServiceStatus
+    }
+}
+
+function Reset-Environment {
+    if (!$Force) {
+        $confirm = Read-Host "⚠️ 모든 데이터가 삭제됩니다. 계속하시겠습니까? (y/N)"
+        if ($confirm -ne "y" -and $confirm -ne "Y") {
+            Write-ColoredOutput "❌ 취소되었습니다." "Yellow"
+            return
+        }
+    }
+    
+    Write-ColoredOutput "🧹 완전 초기화 시작..." "Red"
+    
+    # 컨테이너 정지 및 삭제
+    docker-compose down --volumes --remove-orphans
+    
+    # 이미지 정리
+    docker system prune -f
+    
+    # 로그 파일 정리
+    if (Test-Path "logs") {
+        Remove-Item -Path "logs\*" -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    
+    # 백엔드 DB 파일 정리
+    if (Test-Path "cc-webapp\backend") {
+        Remove-Item -Path "cc-webapp\backend\*.db" -Force -ErrorAction SilentlyContinue
+    }
+    
+    Write-ColoredOutput "✅ 완전 초기화 완료!" "Green"
+    Write-ColoredOutput "다음 명령어로 재시작하세요: .\docker-manage.ps1 setup" "Yellow"
+}
+
+# 메인 실행 로직
+switch ($Command.ToLower()) {
+    "help" { Show-Help }
+    "setup" { Setup-Environment }
+    "start" { Start-Services }
+    "stop" { Stop-Services }
+    "restart" { Stop-Services; Start-Services }
+    "status" { Show-ServiceStatus }
+    "logs" { Show-Logs }
+    "shell" { Enter-Shell }
+    "migrate" { Run-Migration }
+    "new-migration" { 
+        $message = if ($args.Count -gt 0) { $args -join " " } else { "Auto-generated migration" }
+        Create-Migration -Message $message 
+    }
+    "backup" { Backup-Database }
+    "reset" { Reset-Environment }
+    "clean" { Reset-Environment }
+    default {
+        Write-ColoredOutput "❌ 알 수 없는 명령어: $Command" "Red"
+        Show-Help
+        exit 1
+    }
+}

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 사용자 세그멘테이션 및 분석 모델들
 - RFM 분석, 사용자 세그먼트, 배틀패스 등
@@ -6,7 +7,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey, Text, Index
 from sqlalchemy.orm import relationship
-from .auth_clean import Base
+from app.database import Base
 
 
 class UserSegment(Base):

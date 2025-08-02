@@ -74,30 +74,7 @@ class Setting(Base):
     value = Column(String(256), nullable=True)
     description = Column(Text, nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    site_id = Column(String(50), unique=True, nullable=False, index=True)  # 로그인용 사이트ID 추가
-    nickname = Column(String(50), unique=True, nullable=False)
-    phone_number = Column(String(20), unique=True, nullable=False, index=True)  # 실제 전화번호
-    password_hash = Column(String(100), nullable=False)  # 비밀번호 해시 추가
-    invite_code = Column(String(6), nullable=False, index=True)  # 초대코드로 가입
-    cyber_token_balance = Column(Integer, default=200)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    last_login_at = Column(DateTime, nullable=True)  # 최근 로그인 시간
-    # 랭크 시스템 - VIP, PREMIUM, STANDARD 등
-    rank = Column(String(20), default="STANDARD", nullable=False)
-
-    actions = relationship("UserAction", back_populates="user")
-    segment = relationship("UserSegment", uselist=False, back_populates="user") # One-to-one
-    # rewards = relationship("UserReward", back_populates="user", primaryjoin="User.id == UserReward.user_id")  # 임시 비활성화
-    site_visits = relationship("SiteVisit", back_populates="user")
-    notifications = relationship("Notification", back_populates="user")
-
-    # Relationships for new models
-    flash_offers = relationship("FlashOffer", back_populates="user")
-    vip_access_logs = relationship("VIPAccessLog", back_populates="user")
+# User 클래스는 auth_models.py로 이동됨
 
 class UserAction(Base):
     __tablename__ = "user_actions"

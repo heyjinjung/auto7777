@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Casino-Club F2P Backend Main Application
+카지노 클럽 F2P 백엔드 메인 애플리케이션
+"""
+
 from fastapi import FastAPI, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel

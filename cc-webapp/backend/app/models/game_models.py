@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 게임 시스템 모델들
 - 사용자 액션, 보상, 게임 플레이 등
@@ -6,7 +7,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey, Text, Index
 from sqlalchemy.orm import relationship
-from .auth_clean import Base
+from app.database import Base
 
 
 class UserAction(Base):

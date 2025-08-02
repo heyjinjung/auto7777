@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
+# 🎯 핵심 서비스만 포함하는 Docker Compose 설정 (Celery 제외)
 # yaml-language-server: $schema=https://json.schemastore.org/docker-compose.json
-## version: '3.8' (removed as obsolete)
-# 공통 서비스 정의 (dev/prod에서 override)
 
 services:
   cc_zookeeper:
@@ -83,8 +83,7 @@ services:
       retries: 5
       start_period: 20s
 
-
-  # Backend API
+  # Backend API (Celery 의존성 제거)
   backend:
     build:
       context: ./cc-webapp/backend
@@ -174,69 +173,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-
-  # === 백그라운드 작업 서비스 (프로필: celery) ===
-  # Celery Worker (백그라운드 작업)
-  celery-worker:
-    build:
-      context: ./cc-webapp/backend
-      dockerfile: Dockerfile
-    container_name: cc_celery_worker
-    profiles:
-      - celery
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file:
-      - .env.development
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME:-cc_webapp}
-      DB_USER: ${DB_USER:-cc_user}
-      DB_PASSWORD: ${DB_PASSWORD:-cc_secret_password_2025}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-    command: celery -A app.core.celery_app worker --loglevel=info
-    volumes:
-      - ./cc-webapp/backend:/app
-      - celery_logs:/app/logs
-    networks:
-      - ccnet
-    restart: unless-stopped
-
-  # Celery Beat (스케줄러)
-  celery-beat:
-    build:
-      context: ./cc-webapp/backend
-      dockerfile: Dockerfile
-    container_name: cc_celery_beat
-    profiles:
-      - celery
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file:
-      - .env.development
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME:-cc_webapp}
-      DB_USER: ${DB_USER:-cc_user}
-      DB_PASSWORD: ${DB_PASSWORD:-cc_secret_password_2025}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-    command: celery -A app.core.celery_app beat --loglevel=info
-    volumes:
-      - ./cc-webapp/backend:/app
-      - celery_logs:/app/logs
-    networks:
-      - ccnet
-    restart: unless-stopped
 
   # === 개발 도구 (프로필: tools) ===
   pgadmin:
