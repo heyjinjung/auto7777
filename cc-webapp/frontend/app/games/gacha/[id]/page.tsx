@@ -19,7 +19,7 @@ const gachaOptions = [
 
 const rarityColors = {
   common: 'from-gray-500 to-gray-600',
-  rare: 'from-blue-500 to-blue-600',
+  rare: 'from-blue-500 to-blue-600',ㅂ
   epic: 'from-purple-500 to-purple-600',
   legendary: 'from-yellow-500 to-orange-500',
 };

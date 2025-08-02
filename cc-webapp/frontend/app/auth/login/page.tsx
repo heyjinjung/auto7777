@@ -7,8 +7,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import GlowCard from '@/components/ui/GlowCard';
-import Logo from '@/components/ui/Logo';
-import Loading from '@/components/ui/Loading';
+import Logo from '../../components/ui/Logo';
 import AnimatedText from '@/components/ui/AnimatedText';
 
 export default function LoginPage() {
@@ -123,7 +122,16 @@ export default function LoginPage() {
               className="w-full bg-gradient-to-r from-pink-500 to-purple-600"
               disabled={isLoading}
             >
-              {isLoading ? <Loading size="sm" /> : '로그인'}
+              {isLoading ? (
+                <motion.div
+                  className="flex justify-center items-center"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <span className="inline-block w-5 h-5 border-2 border-t-2 border-pink-500 border-t-purple-600 rounded-full animate-spin" />
+                </motion.div>
+              ) : '로그인'}
             </Button>
           </form>
         </GlowCard>
