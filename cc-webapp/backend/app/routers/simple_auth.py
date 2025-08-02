@@ -118,21 +118,25 @@ def create_tables():
             id SERIAL PRIMARY KEY,
             code VARCHAR(6) UNIQUE NOT NULL,
             is_used BOOLEAN DEFAULT FALSE,
+            created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             used_at TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            expires_at TIMESTAMP,
+            max_uses INTEGER,
+            use_count INTEGER DEFAULT 0
         );
         """)
         
         # 고정 초대코드들 추가 (6974, 6969, 2560 무한재사용)
         cursor.execute("""
-        INSERT INTO invite_codes (code, is_used, use_count, max_uses, expires_at, created_by_user_id, used_by_user_id, last_used_at) 
+        INSERT INTO invite_codes (code, is_used, use_count, max_uses, expires_at, created_by_user_id, used_at) 
         VALUES 
-            ('6974', FALSE, 0, NULL, NULL, NULL, NULL, NULL),
-            ('6969', FALSE, 0, NULL, NULL, NULL, NULL, NULL),
-            ('2560', FALSE, 0, NULL, NULL, NULL, NULL, NULL),
-            ('TEST01', FALSE, 0, 1, NULL, NULL, NULL, NULL),
-            ('TEST02', FALSE, 0, 1, NULL, NULL, NULL, NULL),
-            ('TEST03', FALSE, 0, 1, NULL, NULL, NULL, NULL)
+            ('6974', FALSE, 0, NULL, NULL, NULL, NULL),
+            ('6969', FALSE, 0, NULL, NULL, NULL, NULL),
+            ('2560', FALSE, 0, NULL, NULL, NULL, NULL),
+            ('TEST01', FALSE, 0, 1, NULL, NULL, NULL),
+            ('TEST02', FALSE, 0, 1, NULL, NULL, NULL),
+            ('TEST03', FALSE, 0, 1, NULL, NULL, NULL)
         ON CONFLICT (code) DO NOTHING;
         """)
         
@@ -276,7 +280,7 @@ async def signup(data: SignUpRequest):
         if data.invite_code not in ['6974', '6969', '2560']:
             cursor.execute("""
                 UPDATE invite_codes 
-                SET use_count = use_count + 1, last_used_at = CURRENT_TIMESTAMP, used_by_user_id = %s
+                SET use_count = use_count + 1, last_used_at = CURRENT_TIMESTAMP, created_by_user_id = %s
                 WHERE code = %s
             """, (user_id, data.invite_code))
         

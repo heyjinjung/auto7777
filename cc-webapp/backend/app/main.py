@@ -47,28 +47,10 @@ class UserActionEvent(BaseModel):
 from pydantic import BaseModel  # For request/response models
 from typing import Optional
 
-from app.routers import (
-    auth,  # 간소화된 인증 라우터만 사용
-    # 모든 다른 라우터들을 임시로 비활성화 - 모델 의존성 해결 후 재활성화
-    # ai,
-    # analyze,
-    # recommend,
-    # rewards,   # 추가
-    # unlock,    # 추가
-    # user_segments, # 추가
-    # gacha,  # 추가
-    # prize_roulette,  # 추가
-    # notification,  # 추가
-    # tracking,  # 추가
-    personalization,  # 추가
-    adult_content,  # 추가
-    actions,  # 추가
-    corporate,  # 추가
-    users,  # 추가
-    recommendation,  # 추가된 임포트
-    doc_titles,  # 추가
-    invite_router  # 초대코드 관련 API 추가
-)
+# from app.routers import (
+#     # auth,  # 기존 auth 라우터 비활성화 - simple_auth로 통합
+#     # 모든 다른 라우터들을 임시로 비활성화 - 모델 의존성 해결 후 재활성화
+# )
 
 # JWT 인증 API 임포트 추가
 try:
@@ -277,23 +259,18 @@ if SIMPLE_AUTH_AVAILABLE:
 # app.include_router(rewards.router, prefix="/api")  # 추가
 # app.include_router(unlock.router, prefix="/api")   # 추가
 # app.include_router(user_segments.router, prefix="/api") # 추가
-# app.include_router(gacha.router, prefix="/api")  # 추가
-# app.include_router(prize_roulette.router, prefix="/api/games/roulette", tags=["prize_roulette"])  # 경품 룰렛 API
-# app.include_router(notification.router, prefix="/api")  # 추가
-# app.include_router(tracking.router, prefix="/api")  # 추가
-# app.include_router(personalization.router, prefix="/api")  # 추가
-# app.include_router(adult_content.router, prefix="/api")  # 추가
-# app.include_router(actions.router, prefix="/api")  # 추가
-# app.include_router(corporate.router, prefix="/api")  # 추가
-app.include_router(users.router, prefix="/api")  # 🎯 프로필 조회 API 활성화
-# app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
-# app.include_router(doc_titles.router)  # prefix 없이 등록하여 /docs/titles 직접 접근 가능
-# app.include_router(invite_router.router)  # 초대코드 유효성 검증 API 추가 (이미 /api/invite prefix 포함)
 
-# Simple Auth API 라우터 등록
+# 라우터 등록 - Simple Auth만 사용 (통합)
+# app.include_router(auth.router, prefix="/api", tags=["auth"])  # 기존 auth 라우터 비활성화
+
+# 비활성화된 라우터들 (파일이 정리될 때까지)
+# app.include_router(users.router, prefix="/api")  # 🎯 프로필 조회 API (파일 없음)
+# app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
+
+# Simple Auth API 라우터 등록 (메인 AUTH 시스템)
 if SIMPLE_AUTH_AVAILABLE:
-    # app.include_router(simple_auth.router)  # 이미 위에서 /api prefix로 등록됨
-    print("✅ Simple Auth API endpoints registered (already included above)")
+    app.include_router(simple_auth.router, prefix="/api")  # PostgreSQL 기반 간단한 인증 라우터
+    print("✅ Simple Auth API endpoints registered (메인 AUTH 시스템)")
 else:
     print("⚠️ Simple Auth API endpoints not available")
 

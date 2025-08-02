@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# Import individual router modules to make them accessible
-from . import auth_simple as auth  # 간단한 인증 라우터 사용
+# Import individual router modules to make them accessible  
+from . import simple_auth as auth  # 간단한 인증 라우터 사용
 # from . import admin  # 임시 비활성화
 # from . import games  # 임시 비활성화
 # from . import segments  # 임시 비활성화

@@ -148,6 +148,9 @@ class InviteCode(Base):
     used_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     used_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)  # 만료일
+    max_uses = Column(Integer, nullable=True)  # 최대 사용 횟수
+    use_count = Column(Integer, default=0, nullable=False)  # 현재 사용 횟수
     
     # 관계
     used_by = relationship("User")
