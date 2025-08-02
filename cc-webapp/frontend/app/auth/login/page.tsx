@@ -7,7 +7,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import GlowCard from '@/components/ui/GlowCard';
-import Logo from '../../components/ui/Logo';
+import Logo from '@/components/ui/Logo';
 import AnimatedText from '@/components/ui/AnimatedText';
 
 export default function LoginPage() {

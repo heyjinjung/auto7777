@@ -1,6 +1,5 @@
 import React from "react";
 import { motion } from "framer-motion";
-import clsx from "clsx";
 
 const sizeClasses = {
   sm: "w-8 h-8 p-1",
@@ -26,26 +25,25 @@ interface IconButtonProps {
 export default function IconButton({
   children,
   onClick,
-  className,
+  className = "",
   size = "md",
   variant = "default",
-  disabled = false,
-  ...props
+  disabled = false
 }: IconButtonProps) {
+  const baseClasses = "rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900";
+  const sizeClass = sizeClasses[size];
+  const variantClass = variantClasses[variant];
+  const disabledClass = disabled ? "opacity-50 cursor-not-allowed" : "";
+  
+  const combinedClassName = `${baseClasses} ${sizeClass} ${variantClass} ${disabledClass} ${className}`.trim();
+  
   return (
     <motion.button
       whileHover={!disabled ? { scale: 1.05 } : {}}
       whileTap={!disabled ? { scale: 0.95 } : {}}
       onClick={onClick}
       disabled={disabled}
-      className={clsx(
-        "rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900",
-        sizeClasses[size],
-        variantClasses[variant],
-        disabled && "opacity-50 cursor-not-allowed",
-        className
-      )}
-      {...props}
+      className={combinedClassName}
     >
       {children}
     </motion.button>

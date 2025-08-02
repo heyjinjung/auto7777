@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Sparkles, Trophy, Gift, Gamepad2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
@@ -66,7 +66,7 @@ export default function OnboardingCarousel({ onComplete }: { onComplete: () => v
                   transition={{ delay: 0.2, type: "spring" }}
                   className={`inline-flex p-4 rounded-full bg-gradient-to-r ${slides[currentSlide].gradient} mb-6`}
                 >
-                  {<slides[currentSlide].icon className="w-12 h-12 text-white" />}
+                  {React.createElement(slides[currentSlide].icon, { className: "w-12 h-12 text-white" })}
                 </motion.div>
                 
                 <h2 className="text-3xl font-bold text-white mb-4">

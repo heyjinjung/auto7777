@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg";
@@ -9,19 +10,14 @@ interface LogoProps {
 export default function Logo({ size = "md", glow = false, className = "" }: LogoProps) {
   const sizeMap = { sm: 32, md: 48, lg: 64 };
   const px = sizeMap[size] || 48;
+  
   return (
-    <div
-      className={`flex items-center justify-center ${glow ? "drop-shadow-neon" : ""} ${className}`}
-      style={{ width: px, height: px }}
+    <motion.div
+      className={`relative flex items-center justify-center ${className}`}
+      style={{ width: `${px}px`, height: `${px}px` }}
+      whileHover={{ scale: 1.05 }}
     >
-      {/* Replace with your actual logo SVG or image */}
-      <svg width={px} height={px} viewBox="0 0 64 64" fill="none">
-        <circle cx="32" cy="32" r="28" stroke="#e11d48" strokeWidth="4" fill="#a21caf" />
-        <text x="32" y="38" textAnchor="middle" fontSize="20" fill="#fff" fontWeight="bold">CC</text>
-      </svg>
-    </div>
-  );
-}
+      {glow && (
         <motion.div
           className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 rounded-full blur-lg opacity-75"
           animate={{

@@ -19,7 +19,7 @@ const gachaOptions = [
 
 const rarityColors = {
   common: 'from-gray-500 to-gray-600',
-  rare: 'from-blue-500 to-blue-600',ㅂ
+  rare: 'from-blue-500 to-blue-600',
   epic: 'from-purple-500 to-purple-600',
   legendary: 'from-yellow-500 to-orange-500',
 };
@@ -238,7 +238,6 @@ export default function GachaGamePage({ params }: { params: { id: string } }) {
         onClose={() => setShowResult(false)}
         result={lastResult}
         onPlayAgain={handleSpin}
-        onGoToGames={() => router.push('/games')}
       />
     </div>
   );
