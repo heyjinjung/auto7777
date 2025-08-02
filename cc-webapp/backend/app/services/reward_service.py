@@ -7,6 +7,10 @@ from app import models
 from .token_service import TokenService
 from ..websockets import manager
 import asyncio
+
+class RewardService:
+    """보상 서비스"""
+    
     def __init__(self, db: Session, token_service: TokenService | None = None):
         self.db = db
         self.token_service = token_service or TokenService(db)

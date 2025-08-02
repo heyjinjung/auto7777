@@ -60,33 +60,111 @@ class UserActionEvent(BaseModel):
 from pydantic import BaseModel  # For request/response models
 from typing import Optional
 
-# 라우터 import 추가 (가이드에 따라 재구성) - 조건부 로드
-ROUTERS_AVAILABLE = False
+# 라우터 import 추가 - 조건부 로드
+routers_loaded = []
+
+# 1. 인증 라우터
 try:
-    from app.routers import (
-        auth,
-        users,
-        actions,
-        gacha,
-        rewards,
-        shop,
-        prize_roulette,
-        admin,
-        rps,
-        dashboard,
-        missions,
-        quiz,
-        notifications,
-        # battlepass_router # battlepass 라우터는 아직 없는 것으로 보임
-    )
-    ROUTERS_AVAILABLE = True
-    print("✅ All routers loaded successfully")
-except ImportError as e:
-    print(f"⚠️ Some routers could not be loaded: {e}")
-    ROUTERS_AVAILABLE = False
+    from app.routers import auth
+    AUTH_ROUTER_AVAILABLE = True
+    routers_loaded.append("auth")
+    print("✅ Auth router loaded successfully")
 except Exception as e:
-    print(f"❌ Error loading routers: {e}")
-    ROUTERS_AVAILABLE = False
+    print(f"⚠️ Auth router could not be loaded: {e}")
+    AUTH_ROUTER_AVAILABLE = False
+
+# 2. 사용자 라우터
+try:
+    from app.routers import users
+    USERS_ROUTER_AVAILABLE = True
+    routers_loaded.append("users")
+    print("✅ Users router loaded successfully")
+except Exception as e:
+    print(f"⚠️ Users router could not be loaded: {e}")
+    USERS_ROUTER_AVAILABLE = False
+
+# 3. 게임 라우터들
+# 3.1 RPS (가위바위보) 게임
+try:
+    from app.routers import rps
+    RPS_ROUTER_AVAILABLE = True
+    routers_loaded.append("rps")
+    print("✅ RPS game router loaded successfully")
+except Exception as e:
+    print(f"⚠️ RPS router could not be loaded: {e}")
+    RPS_ROUTER_AVAILABLE = False
+
+# 3.2 슬롯 게임
+try:
+    from app.routers import slots
+    SLOTS_ROUTER_AVAILABLE = True
+    routers_loaded.append("slots")
+    print("✅ Slots game router loaded successfully")
+except Exception as e:
+    print(f"⚠️ Slots router could not be loaded: {e}")
+    SLOTS_ROUTER_AVAILABLE = False
+
+# 3.3 룰렛 게임
+try:
+    from app.routers import roulette
+    ROULETTE_ROUTER_AVAILABLE = True
+    routers_loaded.append("roulette")
+    print("✅ Roulette game router loaded successfully")
+except Exception as e:
+    print(f"⚠️ Roulette router could not be loaded: {e}")
+    ROULETTE_ROUTER_AVAILABLE = False
+
+# 4. 가챠 라우터
+try:
+    from app.routers import gacha
+    GACHA_ROUTER_AVAILABLE = True
+    routers_loaded.append("gacha")
+    print("✅ Gacha router loaded successfully")
+except Exception as e:
+    print(f"⚠️ Gacha router could not be loaded: {e}")
+    GACHA_ROUTER_AVAILABLE = False
+
+# 5. 상점 라우터
+try:
+    from app.routers import shop
+    SHOP_ROUTER_AVAILABLE = True
+    routers_loaded.append("shop")
+    print("✅ Shop router loaded successfully")
+except Exception as e:
+    print(f"⚠️ Shop router could not be loaded: {e}")
+    SHOP_ROUTER_AVAILABLE = False
+
+# 6. 배틀패스 라우터
+try:
+    from app.routers import battlepass
+    BATTLEPASS_ROUTER_AVAILABLE = True
+    routers_loaded.append("battlepass")
+    print("✅ BattlePass router loaded successfully")
+except Exception as e:
+    print(f"⚠️ BattlePass router could not be loaded: {e}")
+    BATTLEPASS_ROUTER_AVAILABLE = False
+
+# 7. 보상 라우터
+try:
+    from app.routers import rewards
+    REWARDS_ROUTER_AVAILABLE = True
+    routers_loaded.append("rewards")
+    print("✅ Rewards router loaded successfully")
+except Exception as e:
+    print(f"⚠️ Rewards router could not be loaded: {e}")
+    REWARDS_ROUTER_AVAILABLE = False
+
+# 8. 대시보드 라우터
+try:
+    from app.routers import dashboard
+    DASHBOARD_ROUTER_AVAILABLE = True
+    routers_loaded.append("dashboard")
+    print("✅ Dashboard router loaded successfully")
+except Exception as e:
+    print(f"⚠️ Dashboard router could not be loaded: {e}")
+    DASHBOARD_ROUTER_AVAILABLE = False
+
+print(f"✅ Successfully loaded routers: {routers_loaded}")
 
 # JWT 인증 API 임포트 추가
 try:
@@ -252,22 +330,119 @@ app.add_middleware(
 )
 
 # Register API routers
+# 1. 인증 라우터
 if SIMPLE_AUTH_AVAILABLE:
-    app.include_router(simple_auth.router, prefix="/api")  # PostgreSQL 기반 간단한 인증 라우터
+    app.include_router(simple_auth.router, prefix="/api", tags=["Simple Auth"])
     print("✅ Simple Auth API endpoints registered")
+elif AUTH_ROUTER_AVAILABLE:
+    try:
+        app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+        print("✅ Auth API registered")
+    except Exception as e:
+        print(f"❌ Error registering Auth router: {e}")
 else:
-    print("⚠️ Simple Auth API endpoints not available")
+    print("⚠️ No Auth API available")
 
-# 핵심 라우터들 등록 (minimal requirements로 동작하는 것들만)
-# 현재 minimal setup에서는 simple_auth만 사용
-print("ℹ️ Using minimal configuration with Simple Auth only")
+# 2. 사용자 라우터
+if USERS_ROUTER_AVAILABLE:
+    try:
+        app.include_router(users.router, prefix="/api/users", tags=["Users"])
+        print("✅ Users API registered")
+    except Exception as e:
+        print(f"❌ Error registering Users router: {e}")
+else:
+    print("⚠️ Users API not available")
 
-# 라우터 등록 - Simple Auth만 사용 (통합)
-# app.include_router(auth.router, prefix="/api", tags=["auth"])  # 기존 auth 라우터 비활성화
+# 3. 게임 라우터들
+# 3.0 통합 게임 라우터
+try:
+    from app.routers import games
+    GAMES_ROUTER_AVAILABLE = True
+    app.include_router(games.router, prefix="/api/games", tags=["🎮 게임"])
+    print("✅ Integrated Games API registered")
+except Exception as e:
+    print(f"❌ Error registering Games router: {e}")
+    GAMES_ROUTER_AVAILABLE = False
 
-# 비활성화된 라우터들 (파일이 정리될 때까지)
-# app.include_router(users.router, prefix="/api")  # 🎯 프로필 조회 API (파일 없음)
-# app.include_router(recommendation.router, prefix="/api")  # 추가된 라우터 등록
+# 3.1 RPS (가위바위보) 게임
+if RPS_ROUTER_AVAILABLE:
+    try:
+        app.include_router(rps.router, prefix="/api/games/rps", tags=["🎮 게임"])
+        print("✅ RPS game API registered")
+    except Exception as e:
+        print(f"❌ Error registering RPS router: {e}")
+else:
+    print("⚠️ RPS game API not available")
+
+# 3.2 슬롯 게임
+if SLOTS_ROUTER_AVAILABLE:
+    try:
+        app.include_router(slots.router, prefix="/api/games/slots", tags=["🎮 게임"])
+        print("✅ Slots game API registered") 
+    except Exception as e:
+        print(f"❌ Error registering Slots router: {e}")
+else:
+    print("⚠️ Slots game API not available")
+
+# 3.3 룰렛 게임
+if ROULETTE_ROUTER_AVAILABLE:
+    try:
+        app.include_router(roulette.router, prefix="/api/games/roulette", tags=["🎮 게임"])
+        print("✅ Roulette game API registered")
+    except Exception as e:
+        print(f"❌ Error registering Roulette router: {e}")
+else:
+    print("⚠️ Roulette game API not available")
+
+# 4. 가챠 라우터
+if GACHA_ROUTER_AVAILABLE:
+    try:
+        app.include_router(gacha.router, prefix="/api/gacha", tags=["Gacha"])
+        print("✅ Gacha API registered")
+    except Exception as e:
+        print(f"❌ Error registering Gacha router: {e}")
+else:
+    print("⚠️ Gacha API not available")
+
+# 5. 상점 라우터
+if SHOP_ROUTER_AVAILABLE:
+    try:
+        app.include_router(shop.router, prefix="/api/shop", tags=["Shop"])
+        print("✅ Shop API registered")
+    except Exception as e:
+        print(f"❌ Error registering Shop router: {e}")
+else:
+    print("⚠️ Shop API not available")
+
+# 6. 배틀패스 라우터
+if BATTLEPASS_ROUTER_AVAILABLE:
+    try:
+        app.include_router(battlepass.router, prefix="/api/battlepass", tags=["BattlePass"])
+        print("✅ BattlePass API registered")
+    except Exception as e:
+        print(f"❌ Error registering BattlePass router: {e}")
+else:
+    print("⚠️ BattlePass API not available")
+
+# 7. 보상 라우터
+if REWARDS_ROUTER_AVAILABLE:
+    try:
+        app.include_router(rewards.router, prefix="/api/rewards", tags=["Rewards"])
+        print("✅ Rewards API registered")
+    except Exception as e:
+        print(f"❌ Error registering Rewards router: {e}")
+else:
+    print("⚠️ Rewards API not available")
+
+# 8. 대시보드 라우터
+if DASHBOARD_ROUTER_AVAILABLE:
+    try:
+        app.include_router(dashboard.router, prefix="/api", tags=["Dashboard"])
+        print("✅ Dashboard API registered")
+    except Exception as e:
+        print(f"❌ Error registering Dashboard router: {e}")
+else:
+    print("⚠️ Dashboard API not available")
 
 # Kafka API 라우터 등록 (가능한 경우에만)
 if KAFKA_AVAILABLE:
