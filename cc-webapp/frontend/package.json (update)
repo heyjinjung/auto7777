@@ -1,0 +1,17 @@
+{
+  "name": "cc-webapp",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.0.0",
+    "framer-motion": "^5.0.0",
+    "lucide-react": "^0.1.0",
+    "next": "^12.0.0",
+    "clsx": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/jest": "^27.0.0",
+    "typescript": "^4.5.0"
+  }
+}

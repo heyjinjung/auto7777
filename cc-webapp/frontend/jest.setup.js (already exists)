@@ -1,0 +1,14 @@
+const { defaults } = require('jest-config');
+
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    ...defaults.moduleNameMapper,
+  },
+  transform: {
+    '^.+\\.tsx?$': 'ts-jest',
+  },
+};

@@ -1,0 +1,267 @@
+/* Typography System - CC-WEBAPP */
+
+/* Font Face Definitions */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Base Typography Classes */
+.text-primary { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-muted { color: var(--color-text-muted); }
+.text-disabled { color: var(--color-text-disabled); }
+.text-inverse { color: var(--color-text-inverse); }
+
+/* Pink Text Variants */
+.text-pink { color: var(--color-pink-primary); }
+.text-pink-light { color: var(--color-pink-light); }
+.text-pink-dark { color: var(--color-pink-dark); }
+
+/* Accent Text Colors */
+.text-orange { color: var(--color-orange-accent); }
+.text-yellow { color: var(--color-yellow-reward); }
+.text-blue { color: var(--color-blue-gem); }
+.text-purple { color: var(--color-purple); }
+.text-green { color: var(--color-green); }
+
+/* Status Text Colors */
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-error { color: var(--color-error); }
+.text-info { color: var(--color-info); }
+
+/* Font Sizes */
+.text-xs { font-size: var(--text-xs); }
+.text-sm { font-size: var(--text-sm); }
+.text-base { font-size: var(--text-base); }
+.text-lg { font-size: var(--text-lg); }
+.text-xl { font-size: var(--text-xl); }
+.text-2xl { font-size: var(--text-2xl); }
+.text-3xl { font-size: var(--text-3xl); }
+.text-4xl { font-size: var(--text-4xl); }
+.text-5xl { font-size: var(--text-5xl); }
+
+/* Font Weights */
+.font-thin { font-weight: var(--font-thin); }
+.font-light { font-weight: var(--font-light); }
+.font-normal { font-weight: var(--font-normal); }
+.font-medium { font-weight: var(--font-medium); }
+.font-semibold { font-weight: var(--font-semibold); }
+.font-bold { font-weight: var(--font-bold); }
+.font-extrabold { font-weight: var(--font-extrabold); }
+.font-black { font-weight: var(--font-black); }
+
+/* Typography Components */
+.heading-1 {
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.heading-2 {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.heading-3 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-snug);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.heading-4 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-medium);
+  line-height: var(--leading-snug);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.body-large {
+  font-size: var(--text-lg);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-primary);
+}
+
+.body-base {
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+}
+
+.body-small {
+  font-size: var(--text-sm);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-normal);
+  color: var(--color-text-secondary);
+}
+
+.caption {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  line-height: var(--leading-normal);
+  color: var(--color-text-muted);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+}
+
+/* Special Typography Effects */
+.text-gradient-pink {
+  background: var(--gradient-pink);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.text-glow {
+  color: var(--color-pink-primary);
+  text-shadow: 0 0 10px rgba(255, 75, 140, 0.5);
+}
+
+.text-glow-intense {
+  color: var(--color-pink-light);
+  text-shadow: 
+    0 0 5px rgba(255, 75, 140, 0.8),
+    0 0 10px rgba(255, 75, 140, 0.6),
+    0 0 15px rgba(255, 75, 140, 0.4);
+}
+
+/* Link Styles */
+.link {
+  color: var(--color-pink-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.link:hover {
+  color: var(--color-pink-light);
+  text-decoration: underline;
+}
+
+.link:focus {
+  outline: 2px solid var(--color-pink-primary);
+  outline-offset: 2px;
+}
+
+/* Code Typography */
+.code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-pink-light);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-secondary);
+}
+
+.pre {
+  font-family: var(--font-mono);
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-secondary);
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+/* List Styles */
+.list {
+  padding-left: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.list-item {
+  margin-bottom: var(--space-1);
+  color: var(--color-text-primary);
+}
+
+.list-item::marker {
+  color: var(--color-pink-primary);
+}
+
+/* Text Utilities */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+.text-justify { text-align: justify; }
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-clip {
+  text-overflow: clip;
+}
+
+.break-words {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.break-all {
+  word-break: break-all;
+}
+
+.no-wrap {
+  white-space: nowrap;
+}
+
+.whitespace-pre {
+  white-space: pre;
+}
+
+.whitespace-pre-line {
+  white-space: pre-line;
+}
+
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
+/* Responsive Typography */
+@media screen and (min-width: 640px) {
+  .heading-1 { font-size: var(--text-5xl); }
+  .heading-2 { font-size: var(--text-4xl); }
+  .heading-3 { font-size: var(--text-3xl); }
+}
+
+@media screen and (min-width: 768px) {
+  .body-large { font-size: var(--text-xl); }
+  .body-base { font-size: var(--text-lg); }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .text-primary { color: var(--color-text-primary); }
+  .text-secondary { color: var(--color-text-secondary); }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .text-primary { color: #FFFFFF; }
+  .text-secondary { color: #E0E0E0; }
+  .text-muted { color: #B0B0B0; }
+}

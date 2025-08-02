@@ -15,27 +15,28 @@
 const GAME_POPUP_CONFIGS = {
   slots: {
     width: 420,
-    height: 680,
-    title: '코스믹 포츈 - 슬롯 머신',
+    height: 700,
+    title: '슬롯 머신',
     url: '/games/slots/popup'
   },
   rps: {
-    width: 400,
-    height: 600,
+    width: 420,
+    height: 700,
     title: 'RPS Battle',
     url: '/games/rps/popup'
   },
   gacha: {
-    width: 450,
+    width: 420,
     height: 700,
-    title: 'Lucky Gacha',
+    title: '랜덤뽑기',
     url: '/gacha/popup'
   },
-  'slot-simple': {
-    width: 400,
-    height: 650,
-    title: '슬롯 머신',
-    url: '/slot/popup'
+
+  roulette: {
+    width: 420,
+    height: 700,
+    title: '룰렛',
+    url: '/games/roulette/popup'
   }
 };
 ```
@@ -47,10 +48,10 @@ const GAME_POPUP_CONFIGS = {
 - 상단 닫기 버튼
 
 ### 4. 팝업 페이지들
-- `/games/slots/popup/page.tsx` - 코스믹 포츈 슬롯
-- `/gacha/popup/page.tsx` - 가챠 시스템  
+- `/games/slots/popup/page.tsx` 
+- `/gacha/popup/page.tsx` - 가챠  
 - `/games/rps/popup/page.tsx` - RPS 배틀
-- `/slot/popup/page.tsx` - 심플 슬롯
+- `/games/roulette/popup/page.tsx` - 룰렛
 
 ## 사용 방법
 

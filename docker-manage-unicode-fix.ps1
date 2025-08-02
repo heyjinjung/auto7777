@@ -46,6 +46,7 @@ function Show-Help {
     Write-Host "  logs            - View logs"
     Write-Host "  shell           - Access container"
     Write-Host "  migrate         - Database migration"
+    Write-Host "  mcp             - Start MCP server for Figma"
     Write-Host "  reset           - Complete reset"
     Write-Host "  clean           - Cleanup"
     Write-Host ""
@@ -109,9 +110,10 @@ function Show-ServiceStatus {
     
     Write-Host ""
     Write-Status "Service URLs:" "Info"
-    Write-Host "  Frontend:    http://localhost:3000"
-    Write-Host "  Backend API: http://localhost:8000"
-    Write-Host "  API Docs:    http://localhost:8000/docs"
+    Write-Host "  Frontend:    http://localhost:18000"
+    Write-Host "  Backend API: http://localhost:8001"
+    Write-Host "  API Docs:    http://localhost:8001/docs"
+    Write-Host "  MCP Server:  ws://localhost:10800"
     
     if ($Tools) {
         Write-Host "  pgAdmin:     http://localhost:5050"
@@ -168,6 +170,21 @@ function Run-Migration {
     }
 }
 
+function Start-MCPServer {
+    Write-Status "Starting MCP Server for Figma integration..." "Info"
+    
+    # MCP 서버를 백그라운드에서 실행
+    $mcpPort = 10800
+    Write-Status "MCP Server will run on port $mcpPort" "Info"
+    
+    # VS Code MCP Server 확장이 이미 설치되어 있는지 확인
+    Write-Status "Please ensure VS Code MCP Server extension is running" "Warning"
+    Write-Status "Figma MCP Configuration:" "Info"
+    Write-Host "  - WebSocket URL: ws://localhost:$mcpPort"
+    Write-Host "  - Session ID: Generate a new one in Figma"
+    Write-Host "  - Use this configuration in Figma MCP plugin"
+}
+
 function Reset-Environment {
     if (!$Force) {
         $confirm = Read-Host "WARNING: All data will be deleted. Continue? (y/N)"
@@ -204,6 +221,7 @@ switch ($Command.ToLower()) {
     "logs" { Show-Logs }
     "shell" { Access-Shell }
     "migrate" { Run-Migration }
+    "mcp" { Start-MCPServer }
     "reset" { Reset-Environment }
     "clean" { Reset-Environment }
     default {

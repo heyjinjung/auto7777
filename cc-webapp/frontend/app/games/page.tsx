@@ -1,306 +1,307 @@
-'use client';
+"use client";
 
-import './games.css';
-import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { 
-  Star, 
-  Zap, 
-  TrendingUp, 
-  Dice1, 
-  Target, 
-  Sparkles,
-  Trophy,
-  Coins,
-  Play,
-  ArrowLeft,
-  Crown,
-  Flame
-} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Filter, TrendingUp, Clock, Star, Sparkles, Trophy, Zap } from 'lucide-react';
+import Input from '@/components/ui/Input';
+import IconButton from '@/components/ui/IconButton';
+import Tab from '@/components/ui/Tab';
+import GameCard from '@/components/cards/GameCard';
+import BottomNavigation from '@/components/layout/BottomNavigation';
+import Badge from '@/components/ui/Badge';
+import GlowCard from '@/components/ui/GlowCard';
+import AnimatedText from '@/components/ui/AnimatedText';
+import { useApi } from '@/hooks/useApi';
 
-type GameType = 'home' | 'slots' | 'roulette' | 'rps' | 'gacha';
+const categories = [
+  { id: 'all', label: '전체', icon: '🎮' },
+  { id: 'popular', label: '인기', icon: '🔥' },
+  { id: 'new', label: '신규', icon: '✨' },
+  { id: 'slots', label: '슬롯', icon: '🎰' },
+  { id: 'mini', label: '미니게임', icon: '🎯' },
+];
 
-interface GameCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  gameType: GameType;
-  accent: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-  minBet: number;
-  maxWin: number;
-  isNew?: boolean;
-  isHot?: boolean;
-}
-
-function GameCard({ 
-  title, 
-  description, 
-  icon, 
-  gameType, 
-  accent, 
-  difficulty, 
-  minBet, 
-  maxWin, 
-  isNew, 
-  isHot
-}: GameCardProps) {
-  const router = useRouter();
-
-  const handleClick = () => {
-    // 실제 브라우저 팝업 창으로 게임 열기
-    const popupConfig = {
-      width: 420,
-      height: 850,
-      resizable: 'no',
-      scrollbars: 'no',
-      status: 'no',
-      toolbar: 'no',
-      menubar: 'no',
-      location: 'no'
-    };
-    
-    const configString = Object.entries(popupConfig)
-      .map(([key, value]) => `${key}=${value}`)
-      .join(',');
-    
-    let popupUrl = '';
-    switch (gameType) {
-      case 'slots':
-        popupUrl = `${window.location.origin}/games/slots/popup`;
-        break;
-      case 'roulette':
-        popupUrl = `${window.location.origin}/games/roulette/popup`;
-        break;
-      case 'rps':
-        popupUrl = `${window.location.origin}/games/rps/popup`;
-        break;
-      case 'gacha':
-        popupUrl = `${window.location.origin}/games/gacha/popup`;
-        break;
-      default:
-        return;
+export default function GamesPage() {
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const { data: gamesData, loading } = useApi('/api/games');
+  
+  const games = gamesData?.games || [];
+  const recentGames = games.slice(0, 5);
+  const recommendedGames = games.filter(g => g.isRecommended).slice(0, 3);
+  
+  const filteredGames = games.filter(game => {
+    if (activeCategory !== 'all') {
+      if (activeCategory === 'popular' && game.popularity < 80) return false;
+      if (activeCategory === 'new' && !game.isNew) return false;
+      if (activeCategory !== 'popular' && activeCategory !== 'new' && game.category !== activeCategory) return false;
     }
-    const popup = window.open(popupUrl, '_blank', configString);
-    if (!popup) {
-      alert('팝업이 차단되었습니다. 브라우저 팝업 차단을 해제해 주세요.');
+    if (searchQuery && !game.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
     }
-  };
+    return true;
+  });
 
   return (
-    <motion.div
-      className="relative group cursor-pointer"
-      whileHover={{ y: -4, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-    >
-      {/* 게임 타이틀 영역 복원 */}
-      <div className="w-full flex items-center justify-center py-3">
-        <span className="text-lg font-bold text-white drop-shadow-md tracking-wide">
-          {title}
-        </span>
-      </div>
-    </motion.div>
-  );
-}
-
-function HomePage() {
-  const games: GameCardProps[] = [
-    {
-      title: "코스믹 포츈",
-      description: "우주 슬롯머신의 짜릿한 재미",
-      icon: <Sparkles className="w-5 h-5 text-purple-400" />,
-      gameType: "slots",
-      accent: "purple-400",
-      difficulty: "Easy",
-      minBet: 10,
-      maxWin: 100000,
-      isNew: true,
-      isHot: true
-    },
-    {
-      title: "갤럭시 룰렛",
-      description: "운명의 숫자를 맞춰보세요",
-      icon: <Target className="w-5 h-5 text-blue-400" />,
-      gameType: "roulette",
-      accent: "blue-400",
-      difficulty: "Medium",
-      minBet: 50,
-      maxWin: 350000,
-      isHot: true
-    },
-    {
-      title: "코스믹 배틀",
-      description: "가위바위보 우주 대결",
-      icon: <Dice1 className="w-5 h-5 text-emerald-400" />,
-      gameType: "rps",
-      accent: "emerald-400",
-      difficulty: "Easy",
-      minBet: 20,
-      maxWin: 80000
-    },
-    {
-      title: "스텔라 랜덤뽑기",
-      description: "행운의 랜덤뽑기로 특별한 보상을 획득하세요!",
-      icon: <Star className="w-5 h-5 text-orange-400" />,
-      gameType: "gacha",
-      accent: "orange-400",
-      difficulty: "Hard",
-      minBet: 100,
-      maxWin: 1000000,
-      isNew: true
-    }
-  ];
-
-  return (
-    <div className="game-dashboard w-full max-w-[420px] mx-auto min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 
-                    relative overflow-hidden">
-      
-      {/* 깔끔한 별빛 효과만 유지 */}
-      <div className="absolute inset-0 opacity-20">
-        {[
-          { left: 15, top: 20, delay: 0.5, duration: 3.2 },
-          { left: 85, top: 35, delay: 1.2, duration: 4.1 },
-          { left: 45, top: 15, delay: 2.0, duration: 3.8 },
-          { left: 25, top: 70, delay: 0.8, duration: 3.5 },
-          { left: 75, top: 60, delay: 1.8, duration: 4.2 },
-          { left: 35, top: 85, delay: 1.0, duration: 3.7 },
-          { left: 90, top: 25, delay: 2.5, duration: 3.3 },
-          { left: 10, top: 50, delay: 0.3, duration: 4.0 },
-          { left: 60, top: 40, delay: 1.5, duration: 3.6 },
-          { left: 80, top: 80, delay: 2.2, duration: 3.9 }
-        ].map((star, i) => (
-          <div
-            key={i}
-            className="absolute w-0.5 h-0.5 bg-yellow-300 rounded-full animate-pulse"
-            style={{
-              left: `${star.left}%`,
-              top: `${star.top}%`,
-              animationDelay: `${star.delay}s`,
-              animationDuration: `${star.duration}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* 메인 컨텐츠 */}
-      <div className="relative z-10 min-h-screen flex flex-col px-2 max-w-lg mx-auto w-full">
-        
-        {/* 개선된 헤더 */}
-        <motion.header
-          className="py-5 text-center relative z-20"
-          initial={{ opacity: 0, y: -40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-        >
-          <motion.h1
-            style={{
-              fontSize: '16px',
-              color: '#FF1493',
-              fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
-              textShadow: '0 12px 40px rgba(0,0,0,0.6), 0 6px 20px rgba(168,85,247,0.4), 0 4px 12px rgba(255,255,255,0.1)',
-              whiteSpace: 'nowrap'
-            }}
-            whileHover={{ scale: 1.02, y: -2 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-          >
-            MODEL CASINO
-          </motion.h1>
-          
-          {/* 프리미엄 통계 */}
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900/20 to-gray-900 pb-20">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-purple-500/20">
+        <div className="p-4">
           <motion.div
-            className="flex items-center justify-center gap-4 text-sm"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4"
+          >
+            <h1 className="text-3xl font-bold">
+              <AnimatedText 
+                text="게임 센터" 
+                className="bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent"
+              />
+            </h1>
+            <p className="text-sm text-gray-400 mt-1 flex items-center gap-1">
+              <Sparkles className="w-4 h-4 text-yellow-500" />
+              행운이 당신을 기다립니다!
+            </p>
+          </motion.div>
+          
+          {/* Search Bar */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+              <Input
+                type="text"
+                placeholder="게임 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-gray-800/50 border-purple-500/30 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+              />
+            </div>
+            <IconButton 
+              onClick={() => setShowFilters(!showFilters)}
+              className={`${showFilters ? 'bg-purple-600' : 'bg-gray-800'} hover:bg-purple-600`}
+            >
+              <Filter className="w-5 h-5" />
+            </IconButton>
+          </div>
+        </div>
+        
+        {/* Category Tabs */}
+        <div className="px-4 pb-2 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 min-w-max">
+            {categories.map((category) => (
+              <motion.button
+                key={category.id}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setActiveCategory(category.id)}
+                className={`px-4 py-2 rounded-full font-medium transition-all flex items-center gap-2
+                  ${activeCategory === category.id 
+                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg shadow-purple-500/30' 
+                    : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'}`}
+              >
+                <span className="text-lg">{category.icon}</span>
+                <span>{category.label}</span>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </header>
+      
+      <main className="p-4">
+        {/* Recommended Games */}
+        {!searchQuery && activeCategory === 'all' && recommendedGames.length > 0 && (
+          <section className="mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 mb-4"
+            >
+              <Trophy className="w-6 h-6 text-yellow-500" />
+              <h2 className="text-xl font-bold text-white">추천 게임</h2>
+              <Badge variant="premium" className="ml-auto">
+                <Zap className="w-3 h-3 mr-1" />
+                HOT
+              </Badge>
+            </motion.div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              {recommendedGames.map((game, index) => (
+                <motion.div
+                  key={game.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <GlowCard glowColor="from-yellow-500 to-orange-500">
+                    <div className="p-4 flex items-center gap-4">
+                      <div className="relative">
+                        <img
+                          src={game.thumbnail}
+                          alt={game.name}
+                          className="w-20 h-20 rounded-lg object-cover"
+                        />
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full p-1">
+                          <Star className="w-4 h-4 text-white fill-current" />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-white">{game.name}</h3>
+                        <p className="text-sm text-gray-400">{game.description}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full">
+                            🎁 2x 보너스
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {game.players.toLocaleString()}명 플레이 중
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </GlowCard>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
+        
+        {/* Recent Games */}
+        {!searchQuery && activeCategory === 'all' && recentGames.length > 0 && (
+          <section className="mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-2 mb-4"
+            >
+              <Clock className="w-6 h-6 text-purple-500" />
+              <h2 className="text-xl font-bold text-white">최근 플레이</h2>
+            </motion.div>
+            
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+              {recentGames.map((game, index) => (
+                <motion.div
+                  key={game.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex-shrink-0"
+                >
+                  <div className="relative w-32">
+                    <div className="relative rounded-xl overflow-hidden shadow-lg">
+                      <img
+                        src={game.thumbnail}
+                        alt={game.name}
+                        className="w-full h-32 object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-2">
+                        <p className="text-sm font-bold text-white truncate">{game.name}</p>
+                        <p className="text-xs text-gray-300">10분 전</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
+        
+        {/* Game Grid */}
+        <section>
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center justify-between mb-4"
           >
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px 16px',
-              borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              transition: 'all 0.3s ease'
-            }}>
-              <TrendingUp className="w-4 h-4 text-emerald-300" />
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px 16px',
-              borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              transition: 'all 0.3s ease'
-            }}>
-              <Zap className="w-4 h-4 text-amber-300" />
-            </div>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <span className="text-2xl">{categories.find(c => c.id === activeCategory)?.icon}</span>
+              {categories.find(c => c.id === activeCategory)?.label} 게임
+            </h2>
+            <span className="text-sm text-gray-400 bg-gray-800/50 px-3 py-1 rounded-full">
+              {filteredGames.length}개
+            </span>
           </motion.div>
-        </motion.header>
-
-        {/* 게임 그리드 */}
-        <main className="flex-1 pb-8">
-          <motion.div
-            className="flex flex-col gap-4"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              visible: {
-                transition: {
-                  staggerChildren: 0.1
-                }
-              }
-            }}
-          >
-            {games.map((game, index) => (
-              <motion.div
-                key={index}
-                variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: { opacity: 1, y: 0 }
-                }}
+          
+          {loading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredGames.map((game, index) => (
+                <motion.div
+                  key={game.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(index * 0.05, 0.3) }}
+                >
+                  <GameCard game={game} />
+                </motion.div>
+              ))}
+            </div>
+          )}
+          
+          {!loading && filteredGames.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12"
+            >
+              <div className="text-6xl mb-4">😢</div>
+              <p className="text-gray-400">게임을 찾을 수 없습니다</p>
+            </motion.div>
+          )}
+        </section>
+        
+        {/* Filter Options Modal */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              className="fixed bottom-20 left-0 right-0 bg-gray-800 border-t border-purple-500/30 p-4 z-50"
+            >
+              <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                <Filter className="w-5 h-5 text-purple-500" />
+                필터 옵션
+              </h3>
+              <div className="space-y-3">
+                {[
+                  { id: 'high-popularity', label: '높은 인기순', icon: '🔥' },
+                  { id: 'new-only', label: '신규 게임만', icon: '✨' },
+                  { id: 'bonus-games', label: '보너스 게임', icon: '🎁' },
+                  { id: 'jackpot', label: '잭팟 가능', icon: '💰' },
+                ].map((filter) => (
+                  <label key={filter.id} className="flex items-center gap-3 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="w-5 h-5 rounded border-purple-500/50 bg-gray-700 text-purple-500 focus:ring-purple-500/50" 
+                    />
+                    <span className="text-gray-300 flex items-center gap-2">
+                      <span className="text-lg">{filter.icon}</span>
+                      {filter.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowFilters(false)}
+                className="w-full mt-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-lg"
               >
-                <GameCard {...game} />
-              </motion.div>
-            ))}
-          </motion.div>
-        </main>
-
-        {/* 프리미엄 푸터 */}
-        <motion.footer
-          className="py-6 text-center border-t border-white/10 backdrop-blur-md"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-        >
-          <p style={{
-               fontFamily: "'Inter', sans-serif",
-               color: 'rgba(255, 255, 255, 0.6)',
-               fontSize: '0.875rem',
-               fontWeight: '400',
-               letterSpacing: '0.025em',
-               textShadow: '0 2px 8px rgba(0,0,0,0.3)'
-             }}>
-            Responsible Gaming • Licensed & Secure ⭐
-          </p>
-        </motion.footer>
-      </div>
+                적용하기
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+      
+      <BottomNavigation />
     </div>
   );
-}
-
-export default function App() {
-  useEffect(() => {
-    document.title = '🎰 COSMIC CASINO - 프리미엄 우주 카지노';
-  }, []);
-
-  return <HomePage />;
 }
